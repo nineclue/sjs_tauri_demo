@@ -15,20 +15,20 @@ object Front:
         println("Hello from Scala.js")
         dom.document.body.appendChild(content.render)
 
-    val content = 
+    val content =
         val nameInput = input(id := "greet-input", placeholder := "Enter a name...").render
         val greetMsg = p(id := "greet-msg").render
-        def submitHandler(e: Event) = 
+        def submitHandler(e: Event) =
             e.preventDefault()
-            TauriCore.invoke("greet", js.Dynamic.literal("name" -> nameInput.textContent)).toFuture.onComplete: tryo =>
+            TauriCore.invoke("greet", js.Dynamic.literal("name" -> nameInput.value)).toFuture.onComplete: tryo =>
                 tryo.toOption.foreach(jso => greetMsg.textContent = jso.asInstanceOf[String])
         tag("main")(cls := "container",
             h1("Welcome to Tauri"),
             div(cls := "row",
-                a(href := "https://tauri.app", 
+                a(href := "https://tauri.app",
                     target := "_blank",
                     img(src := "/assets/tauri.svg", cls := "logo tauri", alt := "Tauri logo")),
-                a(href := "https://developer.mozilla.org/en-US/docs/Web/JavaScript", 
+                a(href := "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
                     target := "_blank",
                     img(src := "/assets/javascript.svg", cls := "logo vanilla", alt := "JavaScript logo"))
             ),
@@ -37,8 +37,7 @@ object Front:
 
             form(cls := "row", id := "greet-form",
                 onsubmit := submitHandler,
-                nameInput, 
+                nameInput,
                 button(`type` := "submit", "Greet")),
             greetMsg
         )
-

@@ -1025,7 +1025,7 @@ function $p_LFront$__submitHandler$1__Lorg_scalajs_dom_HTMLInputElement__Lorg_sc
   e.preventDefault();
   var $x_2 = window.__TAURI__.core;
   var $x_1 = $m_sr_ScalaRunTime$();
-  var s = $as_T(nameInput$1.textContent);
+  var s = $as_T(nameInput$1.value);
   var fields = $x_1.wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([new $c_T2("name", s)]));
   var p = $x_2.invoke("greet", $m_sjs_js_special_package$().objectLiteral__sci_Seq__sjs_js_Object(fields));
   $n($m_sjs_js_Thenable$ThenableOps$().toFuture$extension__sjs_js_Thenable__s_concurrent_Future(p)).onComplete__F1__s_concurrent_ExecutionContext__V(new $c_sjsr_AnonFunction1(((tryo) => {
