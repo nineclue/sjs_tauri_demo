@@ -1,18 +1,17 @@
-import scala.scalajs.js, js.annotation.JSGlobal, js.Promise
+import scala.scalajs.js, js.Promise
 import org.scalajs.dom
 import scalatags.JsDom.all.*
 import org.scalajs.dom.Event
-
+import org.scalablytyped.runtime.StringDictionary
+import typings.tauriAppsApi.coreMod //.invoke
+import typings.std.RecordingState
+import typings.tauriAppsApi.appMod
 object Front:
     implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
 
-    @js.native
-    @JSGlobal("window.__TAURI__.core")
-    object TauriCore extends js.Object:
-        def invoke(fname: String, a: js.Object): Promise[js.Object] = js.native
-
     def main(as: Array[String]): Unit =
-        println("Hello from Scala.js")
+        val v = appMod.getTauriVersion().toFuture
+        v.onComplete(tso => tso.toOption.foreach(s => println(s"Hello from Scala.js, $s")))
         dom.document.body.appendChild(content.render)
 
     val content =
@@ -20,8 +19,13 @@ object Front:
         val greetMsg = p(id := "greet-msg").render
         def submitHandler(e: Event) =
             e.preventDefault()
-            TauriCore.invoke("greet", js.Dynamic.literal("name" -> nameInput.value)).toFuture.onComplete: tryo =>
-                tryo.toOption.foreach(jso => greetMsg.textContent = jso.asInstanceOf[String])
+            coreMod.invoke[String]("greet", StringDictionary("name" -> nameInput.value)).toFuture.onComplete: tryo => 
+                println(s"Future completed : $tryo")
+                tryo match
+                    case scala.util.Success(msg: String) => 
+                        greetMsg.textContent = msg
+                    case _ => 
+                        println("Failed to get message from 'greet'")
         tag("main")(cls := "container",
             h1("Welcome to Tauri"),
             div(cls := "row",

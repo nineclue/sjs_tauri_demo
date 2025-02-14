@@ -25,6 +25,7 @@ dist-ssr
 # scala.js mill related
 .metals
 .bloop
+.bsp
 src/out
 out
 mill
