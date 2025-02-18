@@ -8,6 +8,7 @@ object f extends ScalaJSRollupModule {
     def scalaJSVersion = "1.18.2"
 
     def ivyDeps = Agg(
+        ivy"org.typelevel::cats-effect::3.5.7",
         ivy"com.lihaoyi::scalatags::0.13.1",
         ivy"org.scalablytyped::tauri-apps__api::2.2.0-631484"
     )
@@ -15,8 +16,8 @@ object f extends ScalaJSRollupModule {
     override def moduleKind = ModuleKind.ESModule
     override def mainClass: T[Option[String]] = Some("Front")
 
-    override def jsDeps = 
-        super.jsDeps() ++ 
+    override def jsDeps =
+        super.jsDeps() ++
             JsDeps(
                 dependencies = Map(
                     "@tauri-apps/api" -> "^2.2.0"
