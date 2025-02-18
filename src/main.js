@@ -9286,7 +9286,7 @@
       }
       return $n_Lscalatags_generic_Namespace$;
     }
-    function $p_LFront$__submitHandler$1__Lorg_scalajs_dom_HTMLInputElement__Lorg_scalajs_dom_Event__V($thiz, nameInput$1, e) {
+    function $p_LFront$__submitHandler$1__Lorg_scalajs_dom_HTMLInputElement__Z__Lorg_scalajs_dom_HTMLParagraphElement__Lorg_scalajs_dom_Event__V($thiz, nameInput$1, notiFlag$2, greetMsg$1, e) {
       e.preventDefault();
       var $x_2 = $m_LTauriUtil$();
       var $x_1 = $m_sr_ScalaRunTime$();
@@ -9295,10 +9295,14 @@
       var args$proxy1 = $m_sjs_js_special_package$().objectLiteral__sci_Seq__sjs_js_Object(properties);
       $x_2.handle__sjs_js_Promise__T__F1__V(invoke$1("greet", args$proxy1), "Failed to get message from 'greet'", new $c_sjsr_AnonFunction1(((msg) => {
         var msg$1 = $as_T(msg);
-        var fields = $m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([new $c_T2("title", "Scala.js with Tauri")]));
-        var _\uff3fobj = $m_sjs_js_special_package$().objectLiteral__sci_Seq__sjs_js_Object(fields);
-        _\uff3fobj.body = msg$1;
-        sendNotification(_\uff3fobj);
+        if (notiFlag$2) {
+          var fields = $m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([new $c_T2("title", "Scala.js with Tauri")]));
+          var _\uff3fobj = $m_sjs_js_special_package$().objectLiteral__sci_Seq__sjs_js_Object(fields);
+          _\uff3fobj.body = msg$1;
+          sendNotification(_\uff3fobj);
+        } else {
+          greetMsg$1.textContent = msg$1;
+        }
       })));
     }
     /** @constructor */
@@ -9351,7 +9355,7 @@
       var $x_5 = $n($m_Lscalatags_JsDom$all$().id__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("greet-form", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr);
       var $x_4 = $n($m_Lscalatags_JsDom$all$().onsubmit__Lscalatags_generic_Attr());
       var $x_3 = new $c_sjsr_AnonFunction1(((e) => {
-        $p_LFront$__submitHandler$1__Lorg_scalajs_dom_HTMLInputElement__Lorg_scalajs_dom_Event__V(this, nameInput, e);
+        $p_LFront$__submitHandler$1__Lorg_scalajs_dom_HTMLInputElement__Z__Lorg_scalajs_dom_HTMLParagraphElement__Lorg_scalajs_dom_Event__V(this, nameInput, notiFlag, greetMsg, e);
       }));
       $m_Lscalatags_JsDom$all$();
       var ev = new $c_sjsr_AnonFunction1(((f) => {

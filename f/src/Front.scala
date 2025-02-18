@@ -25,9 +25,11 @@ object Front extends IOApp:
         def submitHandler(e: Event) =
             e.preventDefault()
             coreMod.invoke[String]("greet", StringDictionary("name" -> nameInput.value)).handle("Failed to get message from 'greet'"): msg =>
-                // greetMsg.textContent = msg
-                val noti = notiMod.Options("Scala.js with Tauri").setBody(msg)
-                notiMod.sendNotification(noti)
+                if notiFlag then
+                    val noti = notiMod.Options("Scala.js with Tauri").setBody(msg)
+                    notiMod.sendNotification(noti)
+                else
+                    greetMsg.textContent = msg
         tag("main")(cls := "container",
             h1(s"Welcome to Tauri ($tauriVersion)"),
             div(s"notification enabled : ${notiFlag}"),
