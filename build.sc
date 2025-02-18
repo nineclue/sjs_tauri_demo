@@ -10,7 +10,8 @@ object f extends ScalaJSRollupModule {
     def ivyDeps = Agg(
         ivy"org.typelevel::cats-effect::3.5.7",
         ivy"com.lihaoyi::scalatags::0.13.1",
-        ivy"org.scalablytyped::tauri-apps__api::2.2.0-631484"
+        ivy"org.scalablytyped::tauri-apps__api::2.2.0-631484",
+        ivy"org.scalablytyped::tauri-apps__plugin-notification::2.2.1-f89784"
     )
 
     override def moduleKind = ModuleKind.ESModule

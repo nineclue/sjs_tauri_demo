@@ -38,7 +38,7 @@
      *
      * @since 1.0.0
      */
-    async function invoke(cmd, args = {}, options) {
+    async function invoke$1(cmd, args = {}, options) {
         return window.__TAURI_INTERNALS__.invoke(cmd, args, options);
     }
 
@@ -54,7 +54,128 @@
      * @since 1.0.0
      */
     async function getTauriVersion() {
-        return invoke('plugin:app|tauri_version');
+        return invoke$1('plugin:app|tauri_version');
+    }
+
+    /******************************************************************************
+    Copyright (c) Microsoft Corporation.
+
+    Permission to use, copy, modify, and/or distribute this software for any
+    purpose with or without fee is hereby granted.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+    AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+    PERFORMANCE OF THIS SOFTWARE.
+    ***************************************************************************** */
+    /* global Reflect, Promise, SuppressedError, Symbol, Iterator */
+
+
+    typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
+        var e = new Error(message);
+        return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
+    };
+
+    /**
+     * Sends a message to the backend.
+     * @example
+     * ```typescript
+     * import { invoke } from '@tauri-apps/api/core';
+     * await invoke('login', { user: 'tauri', password: 'poiwe3h4r5ip3yrhtew9ty' });
+     * ```
+     *
+     * @param cmd The command name.
+     * @param args The optional arguments to pass to the command.
+     * @param options The request options.
+     * @return A promise resolving or rejecting to the backend response.
+     *
+     * @since 1.0.0
+     */
+    async function invoke(cmd, args = {}, options) {
+        return window.__TAURI_INTERNALS__.invoke(cmd, args, options);
+    }
+
+    // Copyright 2019-2023 Tauri Programme within The Commons Conservancy
+    // SPDX-License-Identifier: Apache-2.0
+    // SPDX-License-Identifier: MIT
+    /**
+     * Send toast notifications (brief auto-expiring OS window element) to your user.
+     * Can also be used with the Notification Web API.
+     *
+     * @module
+     */
+    var ScheduleEvery;
+    (function (ScheduleEvery) {
+        ScheduleEvery["Year"] = "year";
+        ScheduleEvery["Month"] = "month";
+        ScheduleEvery["TwoWeeks"] = "twoWeeks";
+        ScheduleEvery["Week"] = "week";
+        ScheduleEvery["Day"] = "day";
+        ScheduleEvery["Hour"] = "hour";
+        ScheduleEvery["Minute"] = "minute";
+        /**
+         * Not supported on iOS.
+         */
+        ScheduleEvery["Second"] = "second";
+    })(ScheduleEvery || (ScheduleEvery = {}));
+    var Importance;
+    (function (Importance) {
+        Importance[Importance["None"] = 0] = "None";
+        Importance[Importance["Min"] = 1] = "Min";
+        Importance[Importance["Low"] = 2] = "Low";
+        Importance[Importance["Default"] = 3] = "Default";
+        Importance[Importance["High"] = 4] = "High";
+    })(Importance || (Importance = {}));
+    var Visibility;
+    (function (Visibility) {
+        Visibility[Visibility["Secret"] = -1] = "Secret";
+        Visibility[Visibility["Private"] = 0] = "Private";
+        Visibility[Visibility["Public"] = 1] = "Public";
+    })(Visibility || (Visibility = {}));
+    /**
+     * Checks if the permission to send notifications is granted.
+     * @example
+     * ```typescript
+     * import { isPermissionGranted } from '@tauri-apps/plugin-notification';
+     * const permissionGranted = await isPermissionGranted();
+     * ```
+     *
+     * @since 2.0.0
+     */
+    async function isPermissionGranted() {
+        if (window.Notification.permission !== 'default') {
+            return await Promise.resolve(window.Notification.permission === 'granted');
+        }
+        return await invoke('plugin:notification|is_permission_granted');
+    }
+    /**
+     * Sends a notification to the user.
+     * @example
+     * ```typescript
+     * import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
+     * let permissionGranted = await isPermissionGranted();
+     * if (!permissionGranted) {
+     *   const permission = await requestPermission();
+     *   permissionGranted = permission === 'granted';
+     * }
+     * if (permissionGranted) {
+     *   sendNotification('Tauri is awesome!');
+     *   sendNotification({ title: 'TAURI', body: 'Tauri is awesome!' });
+     * }
+     * ```
+     *
+     * @since 2.0.0
+     */
+    function sendNotification(options) {
+        if (typeof options === 'string') {
+            new window.Notification(options);
+        }
+        else {
+            new window.Notification(options.title, options);
+        }
     }
 
     var $L0;
@@ -1005,7 +1126,7 @@
     $c_LTauriUtil$.prototype = new $h_O();
     $c_LTauriUtil$.prototype.constructor = $c_LTauriUtil$;
     $c_LTauriUtil$.prototype;
-    $c_LTauriUtil$.prototype.handle__sjs_js_Promise__s_Option__F1__V = (function(p, emsg, f) {
+    $c_LTauriUtil$.prototype.handle__sjs_js_Promise__T__F1__V = (function(p, emsg, f) {
       $n($m_sjs_js_Thenable$ThenableOps$().toFuture$extension__sjs_js_Thenable__s_concurrent_Future(p)).onComplete__F1__s_concurrent_ExecutionContext__V(new $c_sjsr_AnonFunction1(((tryA) => {
         var tryA$1 = $as_s_util_Try(tryA);
         matchResult1: {
@@ -1014,7 +1135,7 @@
             $n(f).apply__O__O(a);
             break matchResult1;
           }
-          throw $ct_jl_Exception__T__(new $c_jl_Exception(), "Error occured during promise handling");
+          throw $ct_jl_Exception__T__(new $c_jl_Exception(), emsg);
         }
       })), $m_s_concurrent_ExecutionContext$().global__s_concurrent_ExecutionContextExecutor());
     });
@@ -1102,7 +1223,7 @@
     }
     function $f_Lcats_effect_IOApp__main__AT__V($thiz, args) {
       var keepAlive$lzy1 = new $c_sr_LazyRef();
-      if (($thiz.runtime__Lcats_effect_unsafe_IORuntime() === null)) {
+      if (($thiz.LFront$__f_cats$effect$IOApp$$_runtime === null)) {
         var this$1 = $m_Lcats_effect_unsafe_IORuntime$();
         if ((this$1.Lcats_effect_unsafe_IORuntimeCompanionPlatform__f__global === null)) {
           $m_Lcats_effect_unsafe_IORuntime$();
@@ -1110,22 +1231,27 @@
           var batchSize = 64;
           var reportFailure = new $c_sjsr_AnonFunction1(((t) => {
             var t$1 = $as_jl_Throwable(t);
-            $n($thiz.reportFailure__jl_Throwable__Lcats_effect_IO(t$1)).unsafeRunAndForgetWithoutCallback__Lcats_effect_unsafe_IORuntime__V($thiz.runtime__Lcats_effect_unsafe_IORuntime());
+            $n($f_Lcats_effect_IOApp__reportFailure__jl_Throwable__Lcats_effect_IO($thiz, t$1)).unsafeRunAndForgetWithoutCallback__Lcats_effect_unsafe_IORuntime__V($thiz.LFront$__f_cats$effect$IOApp$$_runtime);
           }));
           var compute = new $c_Lcats_effect_unsafe_BatchingMacrotaskExecutor(batchSize, reportFailure);
-          this$1.Lcats_effect_unsafe_IORuntimeCompanionPlatform__f__global = $m_Lcats_effect_unsafe_IORuntime$().apply__s_concurrent_ExecutionContext__s_concurrent_ExecutionContext__Lcats_effect_unsafe_Scheduler__F0__Lcats_effect_unsafe_IORuntimeConfig__Lcats_effect_unsafe_IORuntime(compute, compute, ($m_Lcats_effect_unsafe_IORuntime$(), $as_Lcats_effect_unsafe_Scheduler($n($m_Lcats_effect_unsafe_Scheduler$().createDefaultScheduler__T2()).T2__f__1)), new $c_sjsr_AnonFunction0((() => {
+          var $x_3 = $m_Lcats_effect_unsafe_IORuntime$();
+          $m_Lcats_effect_unsafe_IORuntime$();
+          var $x_2 = $as_Lcats_effect_unsafe_Scheduler($n($m_Lcats_effect_unsafe_Scheduler$().createDefaultScheduler__T2()).T2__f__1);
+          var $x_1 = new $c_sjsr_AnonFunction0((() => {
             $m_Lcats_effect_unsafe_IORuntime$().resetGlobal__V();
-          })), $thiz.runtimeConfig__Lcats_effect_unsafe_IORuntimeConfig());
+          }));
+          var this$5 = $m_Lcats_effect_unsafe_IORuntimeConfig$();
+          this$1.Lcats_effect_unsafe_IORuntimeCompanionPlatform__f__global = $x_3.apply__s_concurrent_ExecutionContext__s_concurrent_ExecutionContext__Lcats_effect_unsafe_Scheduler__F0__Lcats_effect_unsafe_IORuntimeConfig__Lcats_effect_unsafe_IORuntime(compute, compute, $x_2, $x_1, this$5.Lcats_effect_unsafe_IORuntimeConfigCompanionPlatform__f_Default);
           var installed = true;
         } else {
           var installed = false;
         }
-        $thiz.cats$effect$IOApp$$_runtime_$eq__Lcats_effect_unsafe_IORuntime__V($m_Lcats_effect_unsafe_IORuntime$().global__Lcats_effect_unsafe_IORuntime());
+        $thiz.LFront$__f_cats$effect$IOApp$$_runtime = $m_Lcats_effect_unsafe_IORuntime$().global__Lcats_effect_unsafe_IORuntime();
         var installed$2 = installed;
       } else {
-        var this$5 = $m_Lcats_effect_unsafe_IORuntime$();
-        if ((this$5.Lcats_effect_unsafe_IORuntimeCompanionPlatform__f__global === null)) {
-          this$5.Lcats_effect_unsafe_IORuntimeCompanionPlatform__f__global = $thiz.runtime__Lcats_effect_unsafe_IORuntime();
+        var this$6 = $m_Lcats_effect_unsafe_IORuntime$();
+        if ((this$6.Lcats_effect_unsafe_IORuntimeCompanionPlatform__f__global === null)) {
+          this$6.Lcats_effect_unsafe_IORuntimeCompanionPlatform__f__global = $thiz.LFront$__f_cats$effect$IOApp$$_runtime;
           var installed$2 = true;
         } else {
           var installed$2 = false;
@@ -1136,7 +1262,7 @@
       }
       if ($m_Lcats_effect_tracing_TracingConstants$().Lcats_effect_tracing_TracingConstants$__f_isStackTracing) {
         var listener = (() => {
-          $n($n($thiz.runtime__Lcats_effect_unsafe_IORuntime()).Lcats_effect_unsafe_IORuntime__f_fiberMonitor).liveFiberSnapshot__F1__V(new $c_sjsr_AnonFunction1(((_$1) => {
+          $n($n($thiz.LFront$__f_cats$effect$IOApp$$_runtime).Lcats_effect_unsafe_IORuntime__f_fiberMonitor).liveFiberSnapshot__F1__V(new $c_sjsr_AnonFunction1(((_$1) => {
             var _$1$1 = $as_T(_$1);
             $n($m_jl_System$Streams$().jl_System$Streams$__f_err).print__T__V(_$1$1);
           })));
@@ -1144,29 +1270,29 @@
         $m_Lcats_effect_process$().on__T__sjs_js_Function0__V("SIGUSR2", listener);
         $m_Lcats_effect_process$().on__T__sjs_js_Function0__V("SIGINFO", listener);
       }
-      var this$9 = $n($m_Lcats_effect_process$().argv__s_Option());
-      if (this$9.isEmpty__Z()) {
-        var this$10 = $n($m_s_Predef$().wrapRefArray__AO__scm_ArraySeq$ofRef(args));
-        var $x_1 = $m_sci_Nil$().prependedAll__sc_IterableOnce__sci_List(this$10);
+      var this$10 = $n($m_Lcats_effect_process$().argv__s_Option());
+      if (this$10.isEmpty__Z()) {
+        var this$11 = $n($m_s_Predef$().wrapRefArray__AO__scm_ArraySeq$ofRef(args));
+        var $x_4 = $m_sci_Nil$().prependedAll__sc_IterableOnce__sci_List(this$11);
       } else {
-        var $x_1 = this$9.get__O();
+        var $x_4 = this$10.get__O();
       }
-      var argList = $as_sci_List($x_1);
+      var argList = $as_sci_List($x_4);
       try {
         var r1 = process.exit;
-        var $x_2 = new $c_s_util_Success(r1);
+        var $x_5 = new $c_s_util_Success(r1);
       } catch (e) {
         var e$2 = ((e instanceof $c_jl_Throwable) ? e : new $c_sjs_js_JavaScriptException(e));
         matchEnd8: {
-          var $x_2;
+          var $x_5;
           if ($m_s_util_control_NonFatal$().apply__jl_Throwable__Z(e$2)) {
-            var $x_2 = new $c_s_util_Failure(e$2);
+            var $x_5 = new $c_s_util_Failure(e$2);
             break matchEnd8;
           }
           throw ((e$2 instanceof $c_sjs_js_JavaScriptException) ? e$2.sjs_js_JavaScriptException__f_exception : e$2);
         }
       }
-      var hardExit = $as_F1($n($x_2.map__F1__s_util_Try(new $c_sjsr_AnonFunction1(((f) => new $c_sjsr_AnonFunction1(((v1) => {
+      var hardExit = $as_F1($n($x_5.map__F1__s_util_Try(new $c_sjsr_AnonFunction1(((f) => new $c_sjsr_AnonFunction1(((v1) => {
         var i = $uI(v1);
         try {
           f(i);
@@ -1184,13 +1310,15 @@
       }))))));
       var cancelCode = new $c_sr_IntRef(1);
       var F = $m_Lcats_effect_IO$().Lcats_effect_IO$__f__asyncForIO;
-      var this$17 = $n(F);
-      var fa = $n($n($m_Lcats_effect_CpuStarvationCheck$().run__Lcats_effect_unsafe_IORuntimeConfig__Lcats_effect_metrics_CpuStarvationMetrics__F1__Lcats_effect_IO($thiz.runtimeConfig__Lcats_effect_unsafe_IORuntimeConfig(), new $c_Lcats_effect_metrics_JsCpuStarvationMetrics(), new $c_sjsr_AnonFunction1(((metrics) => {
+      var this$19 = $n(F);
+      var $x_6 = $m_Lcats_effect_CpuStarvationCheck$();
+      var this$17 = $m_Lcats_effect_unsafe_IORuntimeConfig$();
+      var fa = $n($n($x_6.run__Lcats_effect_unsafe_IORuntimeConfig__Lcats_effect_metrics_CpuStarvationMetrics__F1__Lcats_effect_IO(this$17.Lcats_effect_unsafe_IORuntimeConfigCompanionPlatform__f_Default, new $c_Lcats_effect_metrics_JsCpuStarvationMetrics(), new $c_sjsr_AnonFunction1(((metrics) => {
         var metrics$1 = $as_Lcats_effect_metrics_CpuStarvationWarningMetrics(metrics);
-        return $thiz.onCpuStarvationWarn__Lcats_effect_metrics_CpuStarvationWarningMetrics__Lcats_effect_IO(metrics$1);
+        return $m_Lcats_effect_CpuStarvationCheck$().logWarning__Lcats_effect_metrics_CpuStarvationWarningMetrics__Lcats_effect_IO(metrics$1);
       })))).background__Lcats_effect_kernel_Resource()).surround__O__Lcats_effect_kernel_MonadCancel__O($thiz.run__sci_List__Lcats_effect_IO(argList), $m_Lcats_effect_IO$().Lcats_effect_IO$__f__asyncForIO);
       var fb = $ps_Lcats_effect_IOApp__keepAlive$1__sr_LazyRef__Lcats_effect_IO(keepAlive$lzy1);
-      var \u03b41$ = $n($as_Lcats_effect_IO($f_Lcats_effect_kernel_GenSpawn__raceOutcome__O__O__O(this$17, fa, fb))).flatMap__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((x$1) => {
+      var \u03b41$ = $n($as_Lcats_effect_IO($f_Lcats_effect_kernel_GenSpawn__raceOutcome__O__O__O(this$19, fa, fb))).flatMap__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((x$1) => {
         var x$1$1 = $as_s_util_Either(x$1);
         if ((x$1$1 instanceof $c_s_util_Left)) {
           var x20 = $as_Lcats_effect_kernel_Outcome($n($as_s_util_Left(x$1$1)).s_util_Left__f_value);
@@ -1201,15 +1329,15 @@
           }
           if ((x20 instanceof $c_Lcats_effect_kernel_Outcome$Errored)) {
             var x$1$2 = $as_Lcats_effect_kernel_Outcome$Errored(x20);
-            var this$21 = $n(x$1$2);
-            var x18 = $as_jl_Throwable(this$21.Lcats_effect_kernel_Outcome$Errored__f_e);
+            var this$23 = $n(x$1$2);
+            var x18 = $as_jl_Throwable(this$23.Lcats_effect_kernel_Outcome$Errored__f_e);
             $m_Lcats_effect_IO$();
             return new $c_Lcats_effect_IO$Error(x18);
           }
           if ((x20 instanceof $c_Lcats_effect_kernel_Outcome$Succeeded)) {
             var x$1$3 = $as_Lcats_effect_kernel_Outcome$Succeeded(x20);
-            var this$25 = $n(x$1$3);
-            var x13 = $as_Lcats_effect_IO(this$25.Lcats_effect_kernel_Outcome$Succeeded__f_fa);
+            var this$27 = $n(x$1$3);
+            var x13 = $as_Lcats_effect_IO(this$27.Lcats_effect_kernel_Outcome$Succeeded__f_fa);
             return x13;
           }
         }
@@ -1217,8 +1345,8 @@
           var x5 = $as_Lcats_effect_kernel_Outcome($n($as_s_util_Right(x$1$1)).s_util_Right__f_value);
           if ((x5 instanceof $c_Lcats_effect_kernel_Outcome$Errored)) {
             var x$1$4 = $as_Lcats_effect_kernel_Outcome$Errored(x5);
-            var this$27 = $n(x$1$4);
-            var x8 = $as_jl_Throwable(this$27.Lcats_effect_kernel_Outcome$Errored__f_e);
+            var this$29 = $n(x$1$4);
+            var x8 = $as_jl_Throwable(this$29.Lcats_effect_kernel_Outcome$Errored__f_e);
             $m_Lcats_effect_IO$();
             return new $c_Lcats_effect_IO$Error(x8);
           }
@@ -1230,14 +1358,14 @@
         $n(hardExit).apply__O__O(cancelCode.sr_IntRef__f_elem);
       })), new $c_sjsr_AnonFunction1(((t$3) => {
         var t$4 = $as_jl_Throwable(t$3);
-        var this$30 = $n(t$4);
-        this$30.printStackTrace__Ljava_io_PrintStream__V($m_jl_System$Streams$().jl_System$Streams$__f_err);
+        var this$32 = $n(t$4);
+        this$32.printStackTrace__Ljava_io_PrintStream__V($m_jl_System$Streams$().jl_System$Streams$__f_err);
         $n(hardExit).apply__O__O(1);
         throw $n(t$4);
       })), new $c_sjsr_AnonFunction1(((c) => {
         var c$1 = $as_Lcats_effect_ExitCode(c);
         $n(hardExit).apply__O__O($n(c$1).Lcats_effect_ExitCode__f_code);
-      })), ($n(\u03b41$), true), $thiz.runtime__Lcats_effect_unsafe_IORuntime());
+      })), ($n(\u03b41$), true), $thiz.LFront$__f_cats$effect$IOApp$$_runtime);
       try {
         process.exit = $m_sjs_js_Any$().fromFunction1__F1__sjs_js_Function1(new $c_sjsr_AnonFunction1(((v1$2) => {
           var _$3 = $uI(v1$2);
@@ -1283,7 +1411,7 @@
     }
     function $p_Lcats_effect_IOApp__gracefulExit$1__F1__sr_IntRef__Lcats_effect_IOFiber__I__V($thiz, hardExit$4, cancelCode$2, fiber$1, code) {
       matchResult2: {
-        var x22 = $n($n($thiz.runtime__Lcats_effect_unsafe_IORuntime()).Lcats_effect_unsafe_IORuntime__f_config).Lcats_effect_unsafe_IORuntimeConfig__f_shutdownHookTimeout;
+        var x22 = $n($n($thiz.LFront$__f_cats$effect$IOApp$$_runtime).Lcats_effect_unsafe_IORuntime__f_config).Lcats_effect_unsafe_IORuntimeConfig__f_shutdownHookTimeout;
         var x = $m_s_concurrent_duration_Duration$().s_concurrent_duration_Duration$__f_Zero;
         if (((x === null) ? (x22 === null) : $n(x).equals__O__Z(x22))) {
           $n(hardExit$4).apply__O__O(code);
@@ -1299,7 +1427,7 @@
       }
       var ev$1 = code;
       $n(cancelCode$2).sr_IntRef__f_elem = ev$1;
-      $n($n(fiber$1).cancel__Lcats_effect_IO()).unsafeRunAndForget__Lcats_effect_unsafe_IORuntime__V($thiz.runtime__Lcats_effect_unsafe_IORuntime());
+      $n($n(fiber$1).cancel__Lcats_effect_IO()).unsafeRunAndForget__Lcats_effect_unsafe_IORuntime__V($thiz.LFront$__f_cats$effect$IOApp$$_runtime);
     }
     /** @constructor */
     function $c_Lcats_effect_IOCompanionPlatform() {
@@ -9158,16 +9286,19 @@
       }
       return $n_Lscalatags_generic_Namespace$;
     }
-    function $p_LFront$__submitHandler$1__Lorg_scalajs_dom_HTMLInputElement__Lorg_scalajs_dom_HTMLParagraphElement__Lorg_scalajs_dom_Event__V($thiz, nameInput$1, greetMsg$1, e) {
+    function $p_LFront$__submitHandler$1__Lorg_scalajs_dom_HTMLInputElement__Lorg_scalajs_dom_Event__V($thiz, nameInput$1, e) {
       e.preventDefault();
       var $x_2 = $m_LTauriUtil$();
       var $x_1 = $m_sr_ScalaRunTime$();
       var y = $as_T(nameInput$1.value);
       var properties = $x_1.wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([new $c_T2("name", y)]));
       var args$proxy1 = $m_sjs_js_special_package$().objectLiteral__sci_Seq__sjs_js_Object(properties);
-      $x_2.handle__sjs_js_Promise__s_Option__F1__V(invoke("greet", args$proxy1), $m_s_Option$().apply__O__s_Option("Failed to get message from 'greet'"), new $c_sjsr_AnonFunction1(((name) => {
-        var name$1 = $as_T(name);
-        greetMsg$1.textContent = name$1;
+      $x_2.handle__sjs_js_Promise__T__F1__V(invoke$1("greet", args$proxy1), "Failed to get message from 'greet'", new $c_sjsr_AnonFunction1(((msg) => {
+        var msg$1 = $as_T(msg);
+        var fields = $m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([new $c_T2("title", "Scala.js with Tauri")]));
+        var _\uff3fobj = $m_sjs_js_special_package$().objectLiteral__sci_Seq__sjs_js_Object(fields);
+        _\uff3fobj.body = msg$1;
+        sendNotification(_\uff3fobj);
       })));
     }
     /** @constructor */
@@ -9180,46 +9311,38 @@
     $c_LFront$.prototype = new $h_O();
     $c_LFront$.prototype.constructor = $c_LFront$;
     $c_LFront$.prototype;
-    $c_LFront$.prototype.cats$effect$IOApp$$_runtime_$eq__Lcats_effect_unsafe_IORuntime__V = (function(x$1) {
-      this.LFront$__f_cats$effect$IOApp$$_runtime = x$1;
-    });
-    $c_LFront$.prototype.runtime__Lcats_effect_unsafe_IORuntime = (function() {
-      return this.LFront$__f_cats$effect$IOApp$$_runtime;
-    });
-    $c_LFront$.prototype.runtimeConfig__Lcats_effect_unsafe_IORuntimeConfig = (function() {
-      var this$1 = $m_Lcats_effect_unsafe_IORuntimeConfig$();
-      return this$1.Lcats_effect_unsafe_IORuntimeConfigCompanionPlatform__f_Default;
-    });
-    $c_LFront$.prototype.reportFailure__jl_Throwable__Lcats_effect_IO = (function(err) {
-      return $f_Lcats_effect_IOApp__reportFailure__jl_Throwable__Lcats_effect_IO(this, err);
-    });
-    $c_LFront$.prototype.onCpuStarvationWarn__Lcats_effect_metrics_CpuStarvationWarningMetrics__Lcats_effect_IO = (function(metrics) {
-      return $m_Lcats_effect_CpuStarvationCheck$().logWarning__Lcats_effect_metrics_CpuStarvationWarningMetrics__Lcats_effect_IO(metrics);
-    });
     $c_LFront$.prototype.run__sci_List__Lcats_effect_IO = (function(as) {
-      return $n($m_LTauriUtil$().toIO__sjs_js_Promise__Lcats_effect_IO(getTauriVersion())).flatMap__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((v) => {
-        var v$1 = $as_T(v);
-        var this$1 = $m_Lcats_effect_IO$();
-        var thunk = new $c_sjsr_AnonFunction0((() => document.body.appendChild($n($m_LFront$().content__T__Lscalatags_JsDom$TypedTag(v$1)).render__Lorg_scalajs_dom_Element())));
-        return $n(this$1.delay__F0__Lcats_effect_IO(thunk)).as__O__Lcats_effect_IO($m_Lcats_effect_ExitCode$().Lcats_effect_ExitCode$__f_Success);
+      return $n($m_LTauriUtil$().toIO__sjs_js_Promise__Lcats_effect_IO(getTauriVersion())).flatMap__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((tauriVersion) => {
+        var tauriVersion$1 = $as_T(tauriVersion);
+        return $n($m_LTauriUtil$().toIO__sjs_js_Promise__Lcats_effect_IO(isPermissionGranted())).flatMap__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((notiFlag) => {
+          var notiFlag$1 = $uZ(notiFlag);
+          var this$1 = $m_Lcats_effect_IO$();
+          var thunk = new $c_sjsr_AnonFunction0((() => document.body.appendChild($n($m_LFront$().content__T__Z__Lscalatags_JsDom$TypedTag(tauriVersion$1, notiFlag$1)).render__Lorg_scalajs_dom_Element())));
+          return $n(this$1.delay__F0__Lcats_effect_IO(thunk)).map__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((x$1) => $m_Lcats_effect_ExitCode$().Lcats_effect_ExitCode$__f_Success)));
+        })));
       })));
     });
-    $c_LFront$.prototype.content__T__Lscalatags_JsDom$TypedTag = (function(tauriVersion) {
+    $c_LFront$.prototype.content__T__Z__Lscalatags_JsDom$TypedTag = (function(tauriVersion, notiFlag) {
       var nameInput = $n($n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().input__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().id__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("greet-input", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($m_Lscalatags_JsDom$all$().placeholder__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("Enter a name...", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr)])))).render__Lorg_scalajs_dom_Element();
       var greetMsg = $n($n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().p__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().id__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("greet-msg", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr)])))).render__Lorg_scalajs_dom_Element();
       var this$2 = $m_Lscalatags_JsDom$all$();
       $m_Lscalatags_JsDom$all$();
       var void$1 = false;
       var ns = $m_Lscalatags_generic_Namespace$().Lscalatags_generic_Namespace$__f_htmlNamespaceConfig;
-      var $x_15 = $n($as_Lscalatags_JsDom$TypedTag($f_Lscalatags_jsdom_TagFactory__typedTag__T__Z__Lscalatags_generic_Namespace__Lscalatags_generic_TypedTag(this$2, "main", void$1, ns)));
-      var $x_14 = $m_sr_ScalaRunTime$();
-      var $x_13 = $n($m_Lscalatags_JsDom$all$().cls__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("container", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr);
+      var $x_18 = $n($as_Lscalatags_JsDom$TypedTag($f_Lscalatags_jsdom_TagFactory__typedTag__T__Z__Lscalatags_generic_Namespace__Lscalatags_generic_TypedTag(this$2, "main", void$1, ns)));
+      var $x_17 = $m_sr_ScalaRunTime$();
+      var $x_16 = $n($m_Lscalatags_JsDom$all$().cls__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("container", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr);
       var this$4 = $n($m_Lscalatags_JsDom$all$().h1__Lscalatags_generic_TypedTag());
-      var $x_11 = $m_sr_ScalaRunTime$();
+      var $x_14 = $m_sr_ScalaRunTime$();
       $m_Lscalatags_JsDom$all$();
       var v = (("Welcome to Tauri (" + tauriVersion) + ")");
-      var xs = $x_11.wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([new $c_Lscalatags_JsDom$StringFrag(v)]));
-      var $x_12 = this$4.apply__sci_Seq__Lscalatags_JsDom$TypedTag(xs);
+      var xs = $x_14.wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([new $c_Lscalatags_JsDom$StringFrag(v)]));
+      var $x_15 = this$4.apply__sci_Seq__Lscalatags_JsDom$TypedTag(xs);
+      var $x_13 = $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().div__Lscalatags_generic_TypedTag()));
+      var $x_12 = $m_sr_ScalaRunTime$();
+      $m_Lscalatags_JsDom$all$();
+      var v$1 = ("notification enabled : " + notiFlag);
+      var $x_11 = $x_13.apply__sci_Seq__Lscalatags_JsDom$TypedTag($x_12.wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([new $c_Lscalatags_JsDom$StringFrag(v$1)])));
       var $x_10 = $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().div__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().cls__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("row", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().a__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().href__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("https://tauri.app", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($m_Lscalatags_JsDom$all$().target__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("_blank", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().img__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().src__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("/assets/tauri.svg", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($m_Lscalatags_JsDom$all$().cls__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("logo tauri", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($m_Lscalatags_JsDom$all$().alt__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("Tauri logo", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr)])))]))), $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().a__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().href__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("https://developer.mozilla.org/en-US/docs/Web/JavaScript", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($m_Lscalatags_JsDom$all$().target__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("_blank", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().img__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().src__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("/assets/javascript.svg", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($m_Lscalatags_JsDom$all$().cls__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("logo vanilla", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($m_Lscalatags_JsDom$all$().alt__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("JavaScript logo", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr)])))])))])));
       var $x_9 = $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().p__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([($m_Lscalatags_JsDom$all$(), new $c_Lscalatags_JsDom$StringFrag("Click on the Tauri logo to learn more about the framework"))])));
       var $x_8 = $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().form__Lscalatags_generic_TypedTag()));
@@ -9228,7 +9351,7 @@
       var $x_5 = $n($m_Lscalatags_JsDom$all$().id__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("greet-form", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr);
       var $x_4 = $n($m_Lscalatags_JsDom$all$().onsubmit__Lscalatags_generic_Attr());
       var $x_3 = new $c_sjsr_AnonFunction1(((e) => {
-        $p_LFront$__submitHandler$1__Lorg_scalajs_dom_HTMLInputElement__Lorg_scalajs_dom_HTMLParagraphElement__Lorg_scalajs_dom_Event__V(this, nameInput, greetMsg, e);
+        $p_LFront$__submitHandler$1__Lorg_scalajs_dom_HTMLInputElement__Lorg_scalajs_dom_Event__V(this, nameInput, e);
       }));
       $m_Lscalatags_JsDom$all$();
       var ev = new $c_sjsr_AnonFunction1(((f) => {
@@ -9236,10 +9359,10 @@
         return $m_sjs_js_Any$().fromFunction1__F1__sjs_js_Function1(f$1);
       }));
       var $x_2 = $x_4.$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair($x_3, new $c_Lscalatags_LowPriorityImplicits$$anon$2(ev));
-      var this$8 = $m_Lscalatags_JsDom$all$();
-      var $x_1 = $x_8.apply__sci_Seq__Lscalatags_JsDom$TypedTag($x_7.wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$x_6, $x_5, $x_2, new $c_Lscalatags_LowPriorityImplicits$bindNode(this$8, nameInput), $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().button__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().type__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("submit", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), ($m_Lscalatags_JsDom$all$(), new $c_Lscalatags_JsDom$StringFrag("Greet"))])))])));
-      var this$10 = $m_Lscalatags_JsDom$all$();
-      return $x_15.apply__sci_Seq__Lscalatags_JsDom$TypedTag($x_14.wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$x_13, $x_12, $x_10, $x_9, $x_1, new $c_Lscalatags_LowPriorityImplicits$bindNode(this$10, greetMsg)])));
+      var this$9 = $m_Lscalatags_JsDom$all$();
+      var $x_1 = $x_8.apply__sci_Seq__Lscalatags_JsDom$TypedTag($x_7.wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$x_6, $x_5, $x_2, new $c_Lscalatags_LowPriorityImplicits$bindNode(this$9, nameInput), $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().button__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().type__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("submit", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), ($m_Lscalatags_JsDom$all$(), new $c_Lscalatags_JsDom$StringFrag("Greet"))])))])));
+      var this$11 = $m_Lscalatags_JsDom$all$();
+      return $x_18.apply__sci_Seq__Lscalatags_JsDom$TypedTag($x_17.wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$x_16, $x_15, $x_11, $x_10, $x_9, $x_1, new $c_Lscalatags_LowPriorityImplicits$bindNode(this$11, greetMsg)])));
     });
     new $TypeData().initClass($c_LFront$, "Front$", ({
       LFront$: 1,
