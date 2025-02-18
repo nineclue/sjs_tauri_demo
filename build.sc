@@ -16,8 +16,6 @@ trait base extends ScalaJSRollupModule {
     )
 
     override def moduleKind = ModuleKind.ESModule
-    override def mainClass: T[Option[String]] = Some("Front")
-
     override def jsDeps =
         super.jsDeps() ++
             JsDeps(
@@ -27,7 +25,7 @@ trait base extends ScalaJSRollupModule {
             )
 
     def sc  = Task {
-        val bundles = f.devBundle()
+        val bundles = devBundle()
         val jsPath = bundles.head.path / os.up
         val targetPath = jsPath / os.up / os.up / os.up / "src"
         val target = targetPath / "main.js"
@@ -40,6 +38,10 @@ trait base extends ScalaJSRollupModule {
     }
 }
 
-object f extends base
+object f extends base {
+  override def mainClass: T[Option[String]] = Some("Front")
+}
 
-object t extends base
+object t extends base {
+  override def mainClass: T[Option[String]] = Some("Tray")
+}

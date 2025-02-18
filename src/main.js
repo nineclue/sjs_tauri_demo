@@ -18,67 +18,138 @@
     /* global Reflect, Promise, SuppressedError, Symbol, Iterator */
 
 
-    typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
-        var e = new Error(message);
-        return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
-    };
-
-    /**
-     * Sends a message to the backend.
-     * @example
-     * ```typescript
-     * import { invoke } from '@tauri-apps/api/core';
-     * await invoke('login', { user: 'tauri', password: 'poiwe3h4r5ip3yrhtew9ty' });
-     * ```
-     *
-     * @param cmd The command name.
-     * @param args The optional arguments to pass to the command.
-     * @param options The request options.
-     * @return A promise resolving or rejecting to the backend response.
-     *
-     * @since 1.0.0
-     */
-    async function invoke$1(cmd, args = {}, options) {
-        return window.__TAURI_INTERNALS__.invoke(cmd, args, options);
+    function __classPrivateFieldGet(receiver, state, kind, f) {
+        if (typeof state === "function" ? receiver !== state || true : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+        return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
     }
 
-    /**
-     * Gets the Tauri version.
-     *
-     * @example
-     * ```typescript
-     * import { getTauriVersion } from '@tauri-apps/api/app';
-     * const tauriVersion = await getTauriVersion();
-     * ```
-     *
-     * @since 1.0.0
-     */
-    async function getTauriVersion() {
-        return invoke$1('plugin:app|tauri_version');
+    function __classPrivateFieldSet(receiver, state, value, kind, f) {
+        if (typeof state === "function" ? receiver !== state || true : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+        return (state.set(receiver, value)), value;
     }
-
-    /******************************************************************************
-    Copyright (c) Microsoft Corporation.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose with or without fee is hereby granted.
-
-    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-    AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-    PERFORMANCE OF THIS SOFTWARE.
-    ***************************************************************************** */
-    /* global Reflect, Promise, SuppressedError, Symbol, Iterator */
-
 
     typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
         var e = new Error(message);
         return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
     };
 
+    // Copyright 2019-2024 Tauri Programme within The Commons Conservancy
+    // SPDX-License-Identifier: Apache-2.0
+    // SPDX-License-Identifier: MIT
+    var _Channel_onmessage, _Channel_nextMessageId, _Channel_pendingMessages, _Resource_rid;
+    /**
+     * Invoke your custom commands.
+     *
+     * This package is also accessible with `window.__TAURI__.core` when [`app.withGlobalTauri`](https://v2.tauri.app/reference/config/#withglobaltauri) in `tauri.conf.json` is set to `true`.
+     * @module
+     */
+    /**
+     * A key to be used to implement a special function
+     * on your types that define how your type should be serialized
+     * when passing across the IPC.
+     * @example
+     * Given a type in Rust that looks like this
+     * ```rs
+     * #[derive(serde::Serialize, serde::Deserialize)
+     * enum UserId {
+     *   String(String),
+     *   Number(u32),
+     * }
+     * ```
+     * `UserId::String("id")` would be serialized into `{ String: "id" }`
+     * and so we need to pass the same structure back to Rust
+     * ```ts
+     * import { SERIALIZE_TO_IPC_FN } from "@tauri-apps/api/core"
+     *
+     * class UserIdString {
+     *   id
+     *   constructor(id) {
+     *     this.id = id
+     *   }
+     *
+     *   [SERIALIZE_TO_IPC_FN]() {
+     *     return { String: this.id }
+     *   }
+     * }
+     *
+     * class UserIdNumber {
+     *   id
+     *   constructor(id) {
+     *     this.id = id
+     *   }
+     *
+     *   [SERIALIZE_TO_IPC_FN]() {
+     *     return { Number: this.id }
+     *   }
+     * }
+     *
+     *
+     * type UserId = UserIdString | UserIdNumber
+     * ```
+     *
+     */
+    // if this value changes, make sure to update it in:
+    // 1. ipc.js
+    // 2. process-ipc-message-fn.js
+    const SERIALIZE_TO_IPC_FN = '__TAURI_TO_IPC_KEY__';
+    /**
+     * Transforms a callback function to a string identifier that can be passed to the backend.
+     * The backend uses the identifier to `eval()` the callback.
+     *
+     * @return A unique identifier associated with the callback function.
+     *
+     * @since 1.0.0
+     */
+    function transformCallback(callback, once = false) {
+        return window.__TAURI_INTERNALS__.transformCallback(callback, once);
+    }
+    class Channel {
+        constructor() {
+            // @ts-expect-error field used by the IPC serializer
+            this.__TAURI_CHANNEL_MARKER__ = true;
+            _Channel_onmessage.set(this, () => {
+                // no-op
+            }
+            // the id is used as a mechanism to preserve message order
+            );
+            // the id is used as a mechanism to preserve message order
+            _Channel_nextMessageId.set(this, 0);
+            _Channel_pendingMessages.set(this, []);
+            this.id = transformCallback(({ message, id }) => {
+                // Process the message if we're at the right order
+                if (id == __classPrivateFieldGet(this, _Channel_nextMessageId, "f")) {
+                    __classPrivateFieldGet(this, _Channel_onmessage, "f").call(this, message);
+                    __classPrivateFieldSet(this, _Channel_nextMessageId, __classPrivateFieldGet(this, _Channel_nextMessageId, "f") + 1);
+                    // process pending messages
+                    while (__classPrivateFieldGet(this, _Channel_nextMessageId, "f") in __classPrivateFieldGet(this, _Channel_pendingMessages, "f")) {
+                        const message = __classPrivateFieldGet(this, _Channel_pendingMessages, "f")[__classPrivateFieldGet(this, _Channel_nextMessageId, "f")];
+                        __classPrivateFieldGet(this, _Channel_onmessage, "f").call(this, message);
+                        // eslint-disable-next-line @typescript-eslint/no-array-delete
+                        delete __classPrivateFieldGet(this, _Channel_pendingMessages, "f")[__classPrivateFieldGet(this, _Channel_nextMessageId, "f")];
+                        __classPrivateFieldSet(this, _Channel_nextMessageId, __classPrivateFieldGet(this, _Channel_nextMessageId, "f") + 1);
+                    }
+                }
+                // Queue the message if we're not
+                else {
+                    // eslint-disable-next-line security/detect-object-injection
+                    __classPrivateFieldGet(this, _Channel_pendingMessages, "f")[id] = message;
+                }
+            });
+        }
+        set onmessage(handler) {
+            __classPrivateFieldSet(this, _Channel_onmessage, handler);
+        }
+        get onmessage() {
+            return __classPrivateFieldGet(this, _Channel_onmessage, "f");
+        }
+        [(_Channel_onmessage = new WeakMap(), _Channel_nextMessageId = new WeakMap(), _Channel_pendingMessages = new WeakMap(), SERIALIZE_TO_IPC_FN)]() {
+            return `__CHANNEL__:${this.id}`;
+        }
+        toJSON() {
+            // eslint-disable-next-line security/detect-object-injection
+            return this[SERIALIZE_TO_IPC_FN]();
+        }
+    }
     /**
      * Sends a message to the backend.
      * @example
@@ -97,85 +168,1318 @@
     async function invoke(cmd, args = {}, options) {
         return window.__TAURI_INTERNALS__.invoke(cmd, args, options);
     }
+    /**
+     * A rust-backed resource stored through `tauri::Manager::resources_table` API.
+     *
+     * The resource lives in the main process and does not exist
+     * in the Javascript world, and thus will not be cleaned up automatiacally
+     * except on application exit. If you want to clean it up early, call {@linkcode Resource.close}
+     *
+     * @example
+     * ```typescript
+     * import { Resource, invoke } from '@tauri-apps/api/core';
+     * export class DatabaseHandle extends Resource {
+     *   static async open(path: string): Promise<DatabaseHandle> {
+     *     const rid: number = await invoke('open_db', { path });
+     *     return new DatabaseHandle(rid);
+     *   }
+     *
+     *   async execute(sql: string): Promise<void> {
+     *     await invoke('execute_sql', { rid: this.rid, sql });
+     *   }
+     * }
+     * ```
+     */
+    class Resource {
+        get rid() {
+            return __classPrivateFieldGet(this, _Resource_rid, "f");
+        }
+        constructor(rid) {
+            _Resource_rid.set(this, void 0);
+            __classPrivateFieldSet(this, _Resource_rid, rid);
+        }
+        /**
+         * Destroys and cleans up this resource from memory.
+         * **You should not call any method on this object anymore and should drop any reference to it.**
+         */
+        async close() {
+            return invoke('plugin:resources|close', {
+                rid: this.rid
+            });
+        }
+    }
+    _Resource_rid = new WeakMap();
 
-    // Copyright 2019-2023 Tauri Programme within The Commons Conservancy
+    // Copyright 2019-2024 Tauri Programme within The Commons Conservancy
+    // SPDX-License-Identifier: Apache-2.0
+    // SPDX-License-Identifier: MIT
+    /** An RGBA Image in row-major order from top to bottom. */
+    class Image extends Resource {
+        /**
+         * Creates an Image from a resource ID. For internal use only.
+         *
+         * @ignore
+         */
+        constructor(rid) {
+            super(rid);
+        }
+        /** Creates a new Image using RGBA data, in row-major order from top to bottom, and with specified width and height. */
+        static async new(rgba, width, height) {
+            return invoke('plugin:image|new', {
+                rgba: transformImage(rgba),
+                width,
+                height
+            }).then((rid) => new Image(rid));
+        }
+        /**
+         * Creates a new image using the provided bytes by inferring the file format.
+         * If the format is known, prefer [@link Image.fromPngBytes] or [@link Image.fromIcoBytes].
+         *
+         * Only `ico` and `png` are supported (based on activated feature flag).
+         *
+         * Note that you need the `image-ico` or `image-png` Cargo features to use this API.
+         * To enable it, change your Cargo.toml file:
+         * ```toml
+         * [dependencies]
+         * tauri = { version = "...", features = ["...", "image-png"] }
+         * ```
+         */
+        static async fromBytes(bytes) {
+            return invoke('plugin:image|from_bytes', {
+                bytes: transformImage(bytes)
+            }).then((rid) => new Image(rid));
+        }
+        /**
+         * Creates a new image using the provided path.
+         *
+         * Only `ico` and `png` are supported (based on activated feature flag).
+         *
+         * Note that you need the `image-ico` or `image-png` Cargo features to use this API.
+         * To enable it, change your Cargo.toml file:
+         * ```toml
+         * [dependencies]
+         * tauri = { version = "...", features = ["...", "image-png"] }
+         * ```
+         */
+        static async fromPath(path) {
+            return invoke('plugin:image|from_path', { path }).then((rid) => new Image(rid));
+        }
+        /** Returns the RGBA data for this image, in row-major order from top to bottom.  */
+        async rgba() {
+            return invoke('plugin:image|rgba', {
+                rid: this.rid
+            }).then((buffer) => new Uint8Array(buffer));
+        }
+        /** Returns the size of this image.  */
+        async size() {
+            return invoke('plugin:image|size', { rid: this.rid });
+        }
+    }
+    /**
+     * Transforms image from various types into a type acceptable by Rust.
+     *
+     * See [tauri::image::JsImage](https://docs.rs/tauri/2/tauri/image/enum.JsImage.html) for more information.
+     * Note the API signature is not stable and might change.
+     */
+    function transformImage(image) {
+        const ret = image == null
+            ? null
+            : typeof image === 'string'
+                ? image
+                : image instanceof Image
+                    ? image.rid
+                    : image;
+        return ret;
+    }
+
+    /**
+     * Get the default window icon.
+     *
+     * @example
+     * ```typescript
+     * import { defaultWindowIcon } from '@tauri-apps/api/app';
+     * await defaultWindowIcon();
+     * ```
+     *
+     * @since 2.0.0
+     */
+    async function defaultWindowIcon() {
+        return invoke('plugin:app|default_window_icon').then((rid) => rid ? new Image(rid) : null);
+    }
+
+    // Copyright 2019-2024 Tauri Programme within The Commons Conservancy
+    // SPDX-License-Identifier: Apache-2.0
+    // SPDX-License-Identifier: MIT
+    var _MenuItemBase_id, _MenuItemBase_kind;
+    function injectChannel(i) {
+        var _a;
+        if ('items' in i) {
+            i.items = (_a = i.items) === null || _a === void 0 ? void 0 : _a.map((item) => 'rid' in item ? item : injectChannel(item));
+        }
+        else if ('action' in i && i.action) {
+            const handler = new Channel();
+            handler.onmessage = i.action;
+            delete i.action;
+            return { ...i, handler };
+        }
+        return i;
+    }
+    async function newMenu(kind, opts) {
+        const handler = new Channel();
+        if (opts && typeof opts === 'object') {
+            if ('action' in opts && opts.action) {
+                handler.onmessage = opts.action;
+                delete opts.action;
+            }
+            // about predefined menu item icon
+            if ('item' in opts &&
+                opts.item &&
+                typeof opts.item === 'object' &&
+                'About' in opts.item &&
+                opts.item.About &&
+                typeof opts.item.About === 'object' &&
+                'icon' in opts.item.About &&
+                opts.item.About.icon) {
+                opts.item.About.icon = transformImage(opts.item.About.icon);
+            }
+            // icon menu item icon
+            if ('icon' in opts && opts.icon) {
+                opts.icon = transformImage(opts.icon);
+            }
+            // submenu items
+            if ('items' in opts && opts.items) {
+                function prepareItem(i) {
+                    var _a;
+                    if ('rid' in i) {
+                        return [i.rid, i.kind];
+                    }
+                    if ('item' in i && typeof i.item === 'object' && ((_a = i.item.About) === null || _a === void 0 ? void 0 : _a.icon)) {
+                        i.item.About.icon = transformImage(i.item.About.icon);
+                    }
+                    if ('icon' in i && i.icon) {
+                        i.icon = transformImage(i.icon);
+                    }
+                    if ('items' in i && i.items) {
+                        // @ts-expect-error the `prepareItem` return doesn't exactly match
+                        // this is fine, because the difference is in `[number, string]` variant
+                        i.items = i.items.map(prepareItem);
+                    }
+                    return injectChannel(i);
+                }
+                // @ts-expect-error the `prepareItem` return doesn't exactly match
+                // this is fine, because the difference is in `[number, string]` variant
+                opts.items = opts.items.map(prepareItem);
+            }
+        }
+        return invoke('plugin:menu|new', {
+            kind,
+            options: opts,
+            handler
+        });
+    }
+    class MenuItemBase extends Resource {
+        /** The id of this item. */
+        get id() {
+            return __classPrivateFieldGet(this, _MenuItemBase_id, "f");
+        }
+        /** @ignore */
+        get kind() {
+            return __classPrivateFieldGet(this, _MenuItemBase_kind, "f");
+        }
+        /** @ignore */
+        constructor(rid, id, kind) {
+            super(rid);
+            /** @ignore */
+            _MenuItemBase_id.set(this, void 0);
+            /** @ignore */
+            _MenuItemBase_kind.set(this, void 0);
+            __classPrivateFieldSet(this, _MenuItemBase_id, id);
+            __classPrivateFieldSet(this, _MenuItemBase_kind, kind);
+        }
+    }
+    _MenuItemBase_id = new WeakMap(), _MenuItemBase_kind = new WeakMap();
+
+    // Copyright 2019-2024 Tauri Programme within The Commons Conservancy
+    // SPDX-License-Identifier: Apache-2.0
+    // SPDX-License-Identifier: MIT
+    /** A menu item inside a {@linkcode Menu} or {@linkcode Submenu} and contains only text. */
+    class MenuItem extends MenuItemBase {
+        /** @ignore */
+        constructor(rid, id) {
+            super(rid, id, 'MenuItem');
+        }
+        /** Create a new menu item. */
+        static async new(opts) {
+            return newMenu('MenuItem', opts).then(([rid, id]) => new MenuItem(rid, id));
+        }
+        /** Returns the text of this menu item. */
+        async text() {
+            return invoke('plugin:menu|text', { rid: this.rid, kind: this.kind });
+        }
+        /** Sets the text for this menu item. */
+        async setText(text) {
+            return invoke('plugin:menu|set_text', {
+                rid: this.rid,
+                kind: this.kind,
+                text
+            });
+        }
+        /** Returns whether this menu item is enabled or not. */
+        async isEnabled() {
+            return invoke('plugin:menu|is_enabled', { rid: this.rid, kind: this.kind });
+        }
+        /** Sets whether this menu item is enabled or not. */
+        async setEnabled(enabled) {
+            return invoke('plugin:menu|set_enabled', {
+                rid: this.rid,
+                kind: this.kind,
+                enabled
+            });
+        }
+        /** Sets the accelerator for this menu item. */
+        async setAccelerator(accelerator) {
+            return invoke('plugin:menu|set_accelerator', {
+                rid: this.rid,
+                kind: this.kind,
+                accelerator
+            });
+        }
+    }
+
+    // Copyright 2019-2024 Tauri Programme within The Commons Conservancy
     // SPDX-License-Identifier: Apache-2.0
     // SPDX-License-Identifier: MIT
     /**
-     * Send toast notifications (brief auto-expiring OS window element) to your user.
-     * Can also be used with the Notification Web API.
-     *
-     * @module
+     * A check menu item inside a {@linkcode Menu} or {@linkcode Submenu}
+     * and usually contains a text and a check mark or a similar toggle
+     * that corresponds to a checked and unchecked states.
      */
-    var ScheduleEvery;
-    (function (ScheduleEvery) {
-        ScheduleEvery["Year"] = "year";
-        ScheduleEvery["Month"] = "month";
-        ScheduleEvery["TwoWeeks"] = "twoWeeks";
-        ScheduleEvery["Week"] = "week";
-        ScheduleEvery["Day"] = "day";
-        ScheduleEvery["Hour"] = "hour";
-        ScheduleEvery["Minute"] = "minute";
-        /**
-         * Not supported on iOS.
-         */
-        ScheduleEvery["Second"] = "second";
-    })(ScheduleEvery || (ScheduleEvery = {}));
-    var Importance;
-    (function (Importance) {
-        Importance[Importance["None"] = 0] = "None";
-        Importance[Importance["Min"] = 1] = "Min";
-        Importance[Importance["Low"] = 2] = "Low";
-        Importance[Importance["Default"] = 3] = "Default";
-        Importance[Importance["High"] = 4] = "High";
-    })(Importance || (Importance = {}));
-    var Visibility;
-    (function (Visibility) {
-        Visibility[Visibility["Secret"] = -1] = "Secret";
-        Visibility[Visibility["Private"] = 0] = "Private";
-        Visibility[Visibility["Public"] = 1] = "Public";
-    })(Visibility || (Visibility = {}));
+    class CheckMenuItem extends MenuItemBase {
+        /** @ignore */
+        constructor(rid, id) {
+            super(rid, id, 'Check');
+        }
+        /** Create a new check menu item. */
+        static async new(opts) {
+            return newMenu('Check', opts).then(([rid, id]) => new CheckMenuItem(rid, id));
+        }
+        /** Returns the text of this check menu item. */
+        async text() {
+            return invoke('plugin:menu|text', { rid: this.rid, kind: this.kind });
+        }
+        /** Sets the text for this check menu item. */
+        async setText(text) {
+            return invoke('plugin:menu|set_text', {
+                rid: this.rid,
+                kind: this.kind,
+                text
+            });
+        }
+        /** Returns whether this check menu item is enabled or not. */
+        async isEnabled() {
+            return invoke('plugin:menu|is_enabled', { rid: this.rid, kind: this.kind });
+        }
+        /** Sets whether this check menu item is enabled or not. */
+        async setEnabled(enabled) {
+            return invoke('plugin:menu|set_enabled', {
+                rid: this.rid,
+                kind: this.kind,
+                enabled
+            });
+        }
+        /** Sets the accelerator for this check menu item. */
+        async setAccelerator(accelerator) {
+            return invoke('plugin:menu|set_accelerator', {
+                rid: this.rid,
+                kind: this.kind,
+                accelerator
+            });
+        }
+        /** Returns whether this check menu item is checked or not. */
+        async isChecked() {
+            return invoke('plugin:menu|is_checked', { rid: this.rid });
+        }
+        /** Sets whether this check menu item is checked or not. */
+        async setChecked(checked) {
+            return invoke('plugin:menu|set_checked', {
+                rid: this.rid,
+                checked
+            });
+        }
+    }
+
+    // Copyright 2019-2024 Tauri Programme within The Commons Conservancy
+    // SPDX-License-Identifier: Apache-2.0
+    // SPDX-License-Identifier: MIT
     /**
-     * Checks if the permission to send notifications is granted.
-     * @example
-     * ```typescript
-     * import { isPermissionGranted } from '@tauri-apps/plugin-notification';
-     * const permissionGranted = await isPermissionGranted();
-     * ```
+     * A native Icon to be used for the menu item
+     *
+     * #### Platform-specific:
+     *
+     * - **Windows / Linux**: Unsupported.
+     */
+    var NativeIcon;
+    (function (NativeIcon) {
+        /** An add item template image. */
+        NativeIcon["Add"] = "Add";
+        /** Advanced preferences toolbar icon for the preferences window. */
+        NativeIcon["Advanced"] = "Advanced";
+        /** A Bluetooth template image. */
+        NativeIcon["Bluetooth"] = "Bluetooth";
+        /** Bookmarks image suitable for a template. */
+        NativeIcon["Bookmarks"] = "Bookmarks";
+        /** A caution image. */
+        NativeIcon["Caution"] = "Caution";
+        /** A color panel toolbar icon. */
+        NativeIcon["ColorPanel"] = "ColorPanel";
+        /** A column view mode template image. */
+        NativeIcon["ColumnView"] = "ColumnView";
+        /** A computer icon. */
+        NativeIcon["Computer"] = "Computer";
+        /** An enter full-screen mode template image. */
+        NativeIcon["EnterFullScreen"] = "EnterFullScreen";
+        /** Permissions for all users. */
+        NativeIcon["Everyone"] = "Everyone";
+        /** An exit full-screen mode template image. */
+        NativeIcon["ExitFullScreen"] = "ExitFullScreen";
+        /** A cover flow view mode template image. */
+        NativeIcon["FlowView"] = "FlowView";
+        /** A folder image. */
+        NativeIcon["Folder"] = "Folder";
+        /** A burnable folder icon. */
+        NativeIcon["FolderBurnable"] = "FolderBurnable";
+        /** A smart folder icon. */
+        NativeIcon["FolderSmart"] = "FolderSmart";
+        /** A link template image. */
+        NativeIcon["FollowLinkFreestanding"] = "FollowLinkFreestanding";
+        /** A font panel toolbar icon. */
+        NativeIcon["FontPanel"] = "FontPanel";
+        /** A `go back` template image. */
+        NativeIcon["GoLeft"] = "GoLeft";
+        /** A `go forward` template image. */
+        NativeIcon["GoRight"] = "GoRight";
+        /** Home image suitable for a template. */
+        NativeIcon["Home"] = "Home";
+        /** An iChat Theater template image. */
+        NativeIcon["IChatTheater"] = "IChatTheater";
+        /** An icon view mode template image. */
+        NativeIcon["IconView"] = "IconView";
+        /** An information toolbar icon. */
+        NativeIcon["Info"] = "Info";
+        /** A template image used to denote invalid data. */
+        NativeIcon["InvalidDataFreestanding"] = "InvalidDataFreestanding";
+        /** A generic left-facing triangle template image. */
+        NativeIcon["LeftFacingTriangle"] = "LeftFacingTriangle";
+        /** A list view mode template image. */
+        NativeIcon["ListView"] = "ListView";
+        /** A locked padlock template image. */
+        NativeIcon["LockLocked"] = "LockLocked";
+        /** An unlocked padlock template image. */
+        NativeIcon["LockUnlocked"] = "LockUnlocked";
+        /** A horizontal dash, for use in menus. */
+        NativeIcon["MenuMixedState"] = "MenuMixedState";
+        /** A check mark template image, for use in menus. */
+        NativeIcon["MenuOnState"] = "MenuOnState";
+        /** A MobileMe icon. */
+        NativeIcon["MobileMe"] = "MobileMe";
+        /** A drag image for multiple items. */
+        NativeIcon["MultipleDocuments"] = "MultipleDocuments";
+        /** A network icon. */
+        NativeIcon["Network"] = "Network";
+        /** A path button template image. */
+        NativeIcon["Path"] = "Path";
+        /** General preferences toolbar icon for the preferences window. */
+        NativeIcon["PreferencesGeneral"] = "PreferencesGeneral";
+        /** A Quick Look template image. */
+        NativeIcon["QuickLook"] = "QuickLook";
+        /** A refresh template image. */
+        NativeIcon["RefreshFreestanding"] = "RefreshFreestanding";
+        /** A refresh template image. */
+        NativeIcon["Refresh"] = "Refresh";
+        /** A remove item template image. */
+        NativeIcon["Remove"] = "Remove";
+        /** A reveal contents template image. */
+        NativeIcon["RevealFreestanding"] = "RevealFreestanding";
+        /** A generic right-facing triangle template image. */
+        NativeIcon["RightFacingTriangle"] = "RightFacingTriangle";
+        /** A share view template image. */
+        NativeIcon["Share"] = "Share";
+        /** A slideshow template image. */
+        NativeIcon["Slideshow"] = "Slideshow";
+        /** A badge for a `smart` item. */
+        NativeIcon["SmartBadge"] = "SmartBadge";
+        /** Small green indicator, similar to iChat's available image. */
+        NativeIcon["StatusAvailable"] = "StatusAvailable";
+        /** Small clear indicator. */
+        NativeIcon["StatusNone"] = "StatusNone";
+        /** Small yellow indicator, similar to iChat's idle image. */
+        NativeIcon["StatusPartiallyAvailable"] = "StatusPartiallyAvailable";
+        /** Small red indicator, similar to iChat's unavailable image. */
+        NativeIcon["StatusUnavailable"] = "StatusUnavailable";
+        /** A stop progress template image. */
+        NativeIcon["StopProgressFreestanding"] = "StopProgressFreestanding";
+        /** A stop progress button template image. */
+        NativeIcon["StopProgress"] = "StopProgress";
+        /** An image of the empty trash can. */
+        NativeIcon["TrashEmpty"] = "TrashEmpty";
+        /** An image of the full trash can. */
+        NativeIcon["TrashFull"] = "TrashFull";
+        /** Permissions for a single user. */
+        NativeIcon["User"] = "User";
+        /** User account toolbar icon for the preferences window. */
+        NativeIcon["UserAccounts"] = "UserAccounts";
+        /** Permissions for a group of users. */
+        NativeIcon["UserGroup"] = "UserGroup";
+        /** Permissions for guests. */
+        NativeIcon["UserGuest"] = "UserGuest";
+    })(NativeIcon || (NativeIcon = {}));
+    /**
+     * An icon menu item inside a {@linkcode Menu} or {@linkcode Submenu}
+     * and usually contains an icon and a text.
+     */
+    class IconMenuItem extends MenuItemBase {
+        /** @ignore */
+        constructor(rid, id) {
+            super(rid, id, 'Icon');
+        }
+        /** Create a new icon menu item. */
+        static async new(opts) {
+            return newMenu('Icon', opts).then(([rid, id]) => new IconMenuItem(rid, id));
+        }
+        /** Returns the text of this icon menu item. */
+        async text() {
+            return invoke('plugin:menu|text', { rid: this.rid, kind: this.kind });
+        }
+        /** Sets the text for this icon menu item. */
+        async setText(text) {
+            return invoke('plugin:menu|set_text', {
+                rid: this.rid,
+                kind: this.kind,
+                text
+            });
+        }
+        /** Returns whether this icon menu item is enabled or not. */
+        async isEnabled() {
+            return invoke('plugin:menu|is_enabled', { rid: this.rid, kind: this.kind });
+        }
+        /** Sets whether this icon menu item is enabled or not. */
+        async setEnabled(enabled) {
+            return invoke('plugin:menu|set_enabled', {
+                rid: this.rid,
+                kind: this.kind,
+                enabled
+            });
+        }
+        /** Sets the accelerator for this icon menu item. */
+        async setAccelerator(accelerator) {
+            return invoke('plugin:menu|set_accelerator', {
+                rid: this.rid,
+                kind: this.kind,
+                accelerator
+            });
+        }
+        /** Sets an icon for this icon menu item */
+        async setIcon(icon) {
+            return invoke('plugin:menu|set_icon', {
+                rid: this.rid,
+                icon: transformImage(icon)
+            });
+        }
+    }
+
+    // Copyright 2019-2024 Tauri Programme within The Commons Conservancy
+    // SPDX-License-Identifier: Apache-2.0
+    // SPDX-License-Identifier: MIT
+    /** A predefined (native) menu item which has a predefined behavior by the OS or by tauri.  */
+    class PredefinedMenuItem extends MenuItemBase {
+        /** @ignore */
+        constructor(rid, id) {
+            super(rid, id, 'Predefined');
+        }
+        /** Create a new predefined menu item. */
+        static async new(opts) {
+            return newMenu('Predefined', opts).then(([rid, id]) => new PredefinedMenuItem(rid, id));
+        }
+        /** Returns the text of this predefined menu item. */
+        async text() {
+            return invoke('plugin:menu|text', { rid: this.rid, kind: this.kind });
+        }
+        /** Sets the text for this predefined menu item. */
+        async setText(text) {
+            return invoke('plugin:menu|set_text', {
+                rid: this.rid,
+                kind: this.kind,
+                text
+            });
+        }
+    }
+
+    // Copyright 2019-2024 Tauri Programme within The Commons Conservancy
+    // SPDX-License-Identifier: Apache-2.0
+    // SPDX-License-Identifier: MIT
+    /**
+     * A size represented in logical pixels.
      *
      * @since 2.0.0
      */
-    async function isPermissionGranted() {
-        if (window.Notification.permission !== 'default') {
-            return await Promise.resolve(window.Notification.permission === 'granted');
+    class LogicalSize {
+        constructor(...args) {
+            this.type = 'Logical';
+            if (args.length === 1) {
+                if ('Logical' in args[0]) {
+                    this.width = args[0].Logical.width;
+                    this.height = args[0].Logical.height;
+                }
+                else {
+                    this.width = args[0].width;
+                    this.height = args[0].height;
+                }
+            }
+            else {
+                this.width = args[0];
+                this.height = args[1];
+            }
         }
-        return await invoke('plugin:notification|is_permission_granted');
+        /**
+         * Converts the logical size to a physical one.
+         * @example
+         * ```typescript
+         * import { LogicalSize } from '@tauri-apps/api/dpi';
+         * import { getCurrentWindow } from '@tauri-apps/api/window';
+         *
+         * const appWindow = getCurrentWindow();
+         * const factor = await appWindow.scaleFactor();
+         * const size = new LogicalSize(400, 500);
+         * const physical = size.toPhysical(factor);
+         * ```
+         *
+         * @since 2.0.0
+         */
+        toPhysical(scaleFactor) {
+            return new PhysicalSize(this.width * scaleFactor, this.height * scaleFactor);
+        }
+        [SERIALIZE_TO_IPC_FN]() {
+            return {
+                width: this.width,
+                height: this.height
+            };
+        }
+        toJSON() {
+            // eslint-disable-next-line security/detect-object-injection
+            return this[SERIALIZE_TO_IPC_FN]();
+        }
     }
     /**
-     * Sends a notification to the user.
-     * @example
-     * ```typescript
-     * import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
-     * let permissionGranted = await isPermissionGranted();
-     * if (!permissionGranted) {
-     *   const permission = await requestPermission();
-     *   permissionGranted = permission === 'granted';
-     * }
-     * if (permissionGranted) {
-     *   sendNotification('Tauri is awesome!');
-     *   sendNotification({ title: 'TAURI', body: 'Tauri is awesome!' });
-     * }
-     * ```
+     * A size represented in physical pixels.
      *
      * @since 2.0.0
      */
-    function sendNotification(options) {
-        if (typeof options === 'string') {
-            new window.Notification(options);
+    class PhysicalSize {
+        constructor(...args) {
+            this.type = 'Physical';
+            if (args.length === 1) {
+                if ('Physical' in args[0]) {
+                    this.width = args[0].Physical.width;
+                    this.height = args[0].Physical.height;
+                }
+                else {
+                    this.width = args[0].width;
+                    this.height = args[0].height;
+                }
+            }
+            else {
+                this.width = args[0];
+                this.height = args[1];
+            }
         }
-        else {
-            new window.Notification(options.title, options);
+        /**
+         * Converts the physical size to a logical one.
+         * @example
+         * ```typescript
+         * import { getCurrentWindow } from '@tauri-apps/api/window';
+         * const appWindow = getCurrentWindow();
+         * const factor = await appWindow.scaleFactor();
+         * const size = await appWindow.innerSize(); // PhysicalSize
+         * const logical = size.toLogical(factor);
+         * ```
+         */
+        toLogical(scaleFactor) {
+            return new LogicalSize(this.width / scaleFactor, this.height / scaleFactor);
         }
+        [SERIALIZE_TO_IPC_FN]() {
+            return {
+                width: this.width,
+                height: this.height
+            };
+        }
+        toJSON() {
+            // eslint-disable-next-line security/detect-object-injection
+            return this[SERIALIZE_TO_IPC_FN]();
+        }
+    }
+    /**
+     *  A position represented in logical pixels.
+     *
+     * @since 2.0.0
+     */
+    class LogicalPosition {
+        constructor(...args) {
+            this.type = 'Logical';
+            if (args.length === 1) {
+                if ('Logical' in args[0]) {
+                    this.x = args[0].Logical.x;
+                    this.y = args[0].Logical.y;
+                }
+                else {
+                    this.x = args[0].x;
+                    this.y = args[0].y;
+                }
+            }
+            else {
+                this.x = args[0];
+                this.y = args[1];
+            }
+        }
+        /**
+         * Converts the logical position to a physical one.
+         * @example
+         * ```typescript
+         * import { LogicalPosition } from '@tauri-apps/api/dpi';
+         * import { getCurrentWindow } from '@tauri-apps/api/window';
+         *
+         * const appWindow = getCurrentWindow();
+         * const factor = await appWindow.scaleFactor();
+         * const position = new LogicalPosition(400, 500);
+         * const physical = position.toPhysical(factor);
+         * ```
+         *
+         * @since 2.0.0
+         */
+        toPhysical(scaleFactor) {
+            return new PhysicalPosition(this.x * scaleFactor, this.y * scaleFactor);
+        }
+        [SERIALIZE_TO_IPC_FN]() {
+            return {
+                x: this.x,
+                y: this.y
+            };
+        }
+        toJSON() {
+            // eslint-disable-next-line security/detect-object-injection
+            return this[SERIALIZE_TO_IPC_FN]();
+        }
+    }
+    /**
+     *  A position represented in physical pixels.
+     *
+     * @since 2.0.0
+     */
+    class PhysicalPosition {
+        constructor(...args) {
+            this.type = 'Physical';
+            if (args.length === 1) {
+                if ('Physical' in args[0]) {
+                    this.x = args[0].Physical.x;
+                    this.y = args[0].Physical.y;
+                }
+                else {
+                    this.x = args[0].x;
+                    this.y = args[0].y;
+                }
+            }
+            else {
+                this.x = args[0];
+                this.y = args[1];
+            }
+        }
+        /**
+         * Converts the physical position to a logical one.
+         * @example
+         * ```typescript
+         * import { PhysicalPosition } from '@tauri-apps/api/dpi';
+         * import { getCurrentWindow } from '@tauri-apps/api/window';
+         *
+         * const appWindow = getCurrentWindow();
+         * const factor = await appWindow.scaleFactor();
+         * const position = new PhysicalPosition(400, 500);
+         * const physical = position.toLogical(factor);
+         * ```
+         *
+         * @since 2.0.0
+         */
+        toLogical(scaleFactor) {
+            return new LogicalPosition(this.x / scaleFactor, this.y / scaleFactor);
+        }
+        [SERIALIZE_TO_IPC_FN]() {
+            return {
+                x: this.x,
+                y: this.y
+            };
+        }
+        toJSON() {
+            // eslint-disable-next-line security/detect-object-injection
+            return this[SERIALIZE_TO_IPC_FN]();
+        }
+    }
+    /**
+     * A position represented either in physical or in logical pixels.
+     *
+     * This type is basically a union type of {@linkcode LogicalSize} and {@linkcode PhysicalSize}
+     * but comes in handy when using `tauri::Position` in Rust as an argument to a command, as this class
+     * automatically serializes into a valid format so it can be deserialized correctly into `tauri::Position`
+     *
+     * So instead of
+     * ```typescript
+     * import { invoke } from '@tauri-apps/api/core';
+     * import { LogicalPosition, PhysicalPosition } from '@tauri-apps/api/dpi';
+     *
+     * const position: LogicalPosition | PhysicalPosition = someFunction(); // where someFunction returns either LogicalPosition or PhysicalPosition
+     * const validPosition = position instanceof LogicalPosition
+     *   ? { Logical: { x: position.x, y: position.y } }
+     *   : { Physical: { x: position.x, y: position.y } }
+     * await invoke("do_something_with_position", { position: validPosition });
+     * ```
+     *
+     * You can just use {@linkcode Position}
+     * ```typescript
+     * import { invoke } from '@tauri-apps/api/core';
+     * import { LogicalPosition, PhysicalPosition, Position } from '@tauri-apps/api/dpi';
+     *
+     * const position: LogicalPosition | PhysicalPosition = someFunction(); // where someFunction returns either LogicalPosition or PhysicalPosition
+     * const validPosition = new Position(position);
+     * await invoke("do_something_with_position", { position: validPosition });
+     * ```
+     *
+     * @since 2.1.0
+     */
+    class Position {
+        constructor(position) {
+            this.position = position;
+        }
+        toLogical(scaleFactor) {
+            return this.position instanceof LogicalPosition
+                ? this.position
+                : this.position.toLogical(scaleFactor);
+        }
+        toPhysical(scaleFactor) {
+            return this.position instanceof PhysicalPosition
+                ? this.position
+                : this.position.toPhysical(scaleFactor);
+        }
+        [SERIALIZE_TO_IPC_FN]() {
+            return {
+                [`${this.position.type}`]: {
+                    x: this.position.x,
+                    y: this.position.y
+                }
+            };
+        }
+        toJSON() {
+            // eslint-disable-next-line security/detect-object-injection
+            return this[SERIALIZE_TO_IPC_FN]();
+        }
+    }
+
+    // Copyright 2019-2024 Tauri Programme within The Commons Conservancy
+    // SPDX-License-Identifier: Apache-2.0
+    // SPDX-License-Identifier: MIT
+    /** @ignore */
+    function itemFromKind([rid, id, kind]) {
+        /* eslint-disable @typescript-eslint/no-unsafe-return */
+        switch (kind) {
+            case 'Submenu':
+                // @ts-expect-error constructor is protected for external usage only, safe for us to use
+                return new Submenu(rid, id);
+            case 'Predefined':
+                // @ts-expect-error constructor is protected for external usage only, safe for us to use
+                return new PredefinedMenuItem(rid, id);
+            case 'Check':
+                // @ts-expect-error constructor is protected for external usage only, safe for us to use
+                return new CheckMenuItem(rid, id);
+            case 'Icon':
+                // @ts-expect-error constructor is protected for external usage only, safe for us to use
+                return new IconMenuItem(rid, id);
+            case 'MenuItem':
+            default:
+                // @ts-expect-error constructor is protected for external usage only, safe for us to use
+                return new MenuItem(rid, id);
+        }
+        /* eslint-enable @typescript-eslint/no-unsafe-return */
+    }
+    /** A type that is a submenu inside a {@linkcode Menu} or {@linkcode Submenu}. */
+    class Submenu extends MenuItemBase {
+        /** @ignore */
+        constructor(rid, id) {
+            super(rid, id, 'Submenu');
+        }
+        /** Create a new submenu. */
+        static async new(opts) {
+            return newMenu('Submenu', opts).then(([rid, id]) => new Submenu(rid, id));
+        }
+        /** Returns the text of this submenu. */
+        async text() {
+            return invoke('plugin:menu|text', { rid: this.rid, kind: this.kind });
+        }
+        /** Sets the text for this submenu. */
+        async setText(text) {
+            return invoke('plugin:menu|set_text', {
+                rid: this.rid,
+                kind: this.kind,
+                text
+            });
+        }
+        /** Returns whether this submenu is enabled or not. */
+        async isEnabled() {
+            return invoke('plugin:menu|is_enabled', { rid: this.rid, kind: this.kind });
+        }
+        /** Sets whether this submenu is enabled or not. */
+        async setEnabled(enabled) {
+            return invoke('plugin:menu|set_enabled', {
+                rid: this.rid,
+                kind: this.kind,
+                enabled
+            });
+        }
+        /**
+         * Add a menu item to the end of this submenu.
+         *
+         * #### Platform-specific:
+         *
+         * - **macOS:** Only {@linkcode Submenu}s can be added to a {@linkcode Menu}.
+         */
+        async append(items) {
+            return invoke('plugin:menu|append', {
+                rid: this.rid,
+                kind: this.kind,
+                items: (Array.isArray(items) ? items : [items]).map((i) => 'rid' in i ? [i.rid, i.kind] : i)
+            });
+        }
+        /**
+         * Add a menu item to the beginning of this submenu.
+         *
+         * #### Platform-specific:
+         *
+         * - **macOS:** Only {@linkcode Submenu}s can be added to a {@linkcode Menu}.
+         */
+        async prepend(items) {
+            return invoke('plugin:menu|prepend', {
+                rid: this.rid,
+                kind: this.kind,
+                items: (Array.isArray(items) ? items : [items]).map((i) => 'rid' in i ? [i.rid, i.kind] : i)
+            });
+        }
+        /**
+         * Add a menu item to the specified position in this submenu.
+         *
+         * #### Platform-specific:
+         *
+         * - **macOS:** Only {@linkcode Submenu}s can be added to a {@linkcode Menu}.
+         */
+        async insert(items, position) {
+            return invoke('plugin:menu|insert', {
+                rid: this.rid,
+                kind: this.kind,
+                items: (Array.isArray(items) ? items : [items]).map((i) => 'rid' in i ? [i.rid, i.kind] : i),
+                position
+            });
+        }
+        /** Remove a menu item from this submenu. */
+        async remove(item) {
+            return invoke('plugin:menu|remove', {
+                rid: this.rid,
+                kind: this.kind,
+                item: [item.rid, item.kind]
+            });
+        }
+        /** Remove a menu item from this submenu at the specified position. */
+        async removeAt(position) {
+            return invoke('plugin:menu|remove_at', {
+                rid: this.rid,
+                kind: this.kind,
+                position
+            }).then(itemFromKind);
+        }
+        /** Returns a list of menu items that has been added to this submenu. */
+        async items() {
+            return invoke('plugin:menu|items', {
+                rid: this.rid,
+                kind: this.kind
+            }).then((i) => i.map(itemFromKind));
+        }
+        /** Retrieves the menu item matching the given identifier. */
+        async get(id) {
+            return invoke('plugin:menu|get', {
+                rid: this.rid,
+                kind: this.kind,
+                id
+            }).then((r) => (r ? itemFromKind(r) : null));
+        }
+        /**
+         * Popup this submenu as a context menu on the specified window.
+         *
+         * If the position, is provided, it is relative to the window's top-left corner.
+         */
+        async popup(at, window) {
+            var _a;
+            return invoke('plugin:menu|popup', {
+                rid: this.rid,
+                kind: this.kind,
+                window: (_a = window === null || window === void 0 ? void 0 : window.label) !== null && _a !== void 0 ? _a : null,
+                at: at instanceof Position ? at : at ? new Position(at) : null
+            });
+        }
+        /**
+         * Set this submenu as the Window menu for the application on macOS.
+         *
+         * This will cause macOS to automatically add window-switching items and
+         * certain other items to the menu.
+         *
+         * #### Platform-specific:
+         *
+         * - **Windows / Linux**: Unsupported.
+         */
+        async setAsWindowsMenuForNSApp() {
+            return invoke('plugin:menu|set_as_windows_menu_for_nsapp', {
+                rid: this.rid
+            });
+        }
+        /**
+         * Set this submenu as the Help menu for the application on macOS.
+         *
+         * This will cause macOS to automatically add a search box to the menu.
+         *
+         * If no menu is set as the Help menu, macOS will automatically use any menu
+         * which has a title matching the localized word "Help".
+         *
+         * #### Platform-specific:
+         *
+         * - **Windows / Linux**: Unsupported.
+         */
+        async setAsHelpMenuForNSApp() {
+            return invoke('plugin:menu|set_as_help_menu_for_nsapp', {
+                rid: this.rid
+            });
+        }
+    }
+
+    // Copyright 2019-2024 Tauri Programme within The Commons Conservancy
+    // SPDX-License-Identifier: Apache-2.0
+    // SPDX-License-Identifier: MIT
+    /** A type that is either a menu bar on the window
+     * on Windows and Linux or as a global menu in the menubar on macOS.
+     *
+     * #### Platform-specific:
+     *
+     * - **macOS**: if using {@linkcode Menu} for the global menubar, it can only contain {@linkcode Submenu}s.
+     */
+    class Menu extends MenuItemBase {
+        /** @ignore */
+        constructor(rid, id) {
+            super(rid, id, 'Menu');
+        }
+        /** Create a new menu. */
+        static async new(opts) {
+            return newMenu('Menu', opts).then(([rid, id]) => new Menu(rid, id));
+        }
+        /** Create a default menu. */
+        static async default() {
+            return invoke('plugin:menu|create_default').then(([rid, id]) => new Menu(rid, id));
+        }
+        /**
+         * Add a menu item to the end of this menu.
+         *
+         * #### Platform-specific:
+         *
+         * - **macOS:** Only {@linkcode Submenu}s can be added to a {@linkcode Menu}.
+         */
+        async append(items) {
+            return invoke('plugin:menu|append', {
+                rid: this.rid,
+                kind: this.kind,
+                items: (Array.isArray(items) ? items : [items]).map((i) => 'rid' in i ? [i.rid, i.kind] : i)
+            });
+        }
+        /**
+         * Add a menu item to the beginning of this menu.
+         *
+         * #### Platform-specific:
+         *
+         * - **macOS:** Only {@linkcode Submenu}s can be added to a {@linkcode Menu}.
+         */
+        async prepend(items) {
+            return invoke('plugin:menu|prepend', {
+                rid: this.rid,
+                kind: this.kind,
+                items: (Array.isArray(items) ? items : [items]).map((i) => 'rid' in i ? [i.rid, i.kind] : i)
+            });
+        }
+        /**
+         * Add a menu item to the specified position in this menu.
+         *
+         * #### Platform-specific:
+         *
+         * - **macOS:** Only {@linkcode Submenu}s can be added to a {@linkcode Menu}.
+         */
+        async insert(items, position) {
+            return invoke('plugin:menu|insert', {
+                rid: this.rid,
+                kind: this.kind,
+                items: (Array.isArray(items) ? items : [items]).map((i) => 'rid' in i ? [i.rid, i.kind] : i),
+                position
+            });
+        }
+        /** Remove a menu item from this menu. */
+        async remove(item) {
+            return invoke('plugin:menu|remove', {
+                rid: this.rid,
+                kind: this.kind,
+                item: [item.rid, item.kind]
+            });
+        }
+        /** Remove a menu item from this menu at the specified position. */
+        async removeAt(position) {
+            return invoke('plugin:menu|remove_at', {
+                rid: this.rid,
+                kind: this.kind,
+                position
+            }).then(itemFromKind);
+        }
+        /** Returns a list of menu items that has been added to this menu. */
+        async items() {
+            return invoke('plugin:menu|items', {
+                rid: this.rid,
+                kind: this.kind
+            }).then((i) => i.map(itemFromKind));
+        }
+        /** Retrieves the menu item matching the given identifier. */
+        async get(id) {
+            return invoke('plugin:menu|get', {
+                rid: this.rid,
+                kind: this.kind,
+                id
+            }).then((r) => (r ? itemFromKind(r) : null));
+        }
+        /**
+         * Popup this menu as a context menu on the specified window.
+         *
+         * If the position, is provided, it is relative to the window's top-left corner.
+         */
+        async popup(at, window) {
+            var _a;
+            return invoke('plugin:menu|popup', {
+                rid: this.rid,
+                kind: this.kind,
+                window: (_a = window === null || window === void 0 ? void 0 : window.label) !== null && _a !== void 0 ? _a : null,
+                at: at instanceof Position ? at : at ? new Position(at) : null
+            });
+        }
+        /**
+         * Sets the app-wide menu and returns the previous one.
+         *
+         * If a window was not created with an explicit menu or had one set explicitly,
+         * this menu will be assigned to it.
+         */
+        async setAsAppMenu() {
+            return invoke('plugin:menu|set_as_app_menu', {
+                rid: this.rid
+            }).then((r) => (r ? new Menu(r[0], r[1]) : null));
+        }
+        /**
+         * Sets the window menu and returns the previous one.
+         *
+         * #### Platform-specific:
+         *
+         * - **macOS:** Unsupported. The menu on macOS is app-wide and not specific to one
+         * window, if you need to set it, use {@linkcode Menu.setAsAppMenu} instead.
+         */
+        async setAsWindowMenu(window) {
+            var _a;
+            return invoke('plugin:menu|set_as_window_menu', {
+                rid: this.rid,
+                window: (_a = window === null || window === void 0 ? void 0 : window.label) !== null && _a !== void 0 ? _a : null
+            }).then((r) => (r ? new Menu(r[0], r[1]) : null));
+        }
+    }
+
+    // Copyright 2019-2024 Tauri Programme within The Commons Conservancy
+    // SPDX-License-Identifier: Apache-2.0
+    // SPDX-License-Identifier: MIT
+    /**
+     * Tray icon class and associated methods. This type constructor is private,
+     * instead, you should use the static method {@linkcode TrayIcon.new}.
+     *
+     * #### Warning
+     *
+     * Unlike Rust, javascript does not have any way to run cleanup code
+     * when an object is being removed by garbage collection, but this tray icon
+     * will be cleaned up when the tauri app exists, however if you want to cleanup
+     * this object early, you need to call {@linkcode TrayIcon.close}.
+     *
+     * @example
+     * ```ts
+     * import { TrayIcon } from '@tauri-apps/api/tray';
+     * const tray = await TrayIcon.new({ tooltip: 'awesome tray tooltip' });
+     * tray.set_tooltip('new tooltip');
+     * ```
+     */
+    class TrayIcon extends Resource {
+        constructor(rid, id) {
+            super(rid);
+            this.id = id;
+        }
+        /** Gets a tray icon using the provided id. */
+        static async getById(id) {
+            return invoke('plugin:tray|get_by_id', { id }).then((rid) => rid ? new TrayIcon(rid, id) : null);
+        }
+        /**
+         * Removes a tray icon using the provided id from tauri's internal state.
+         *
+         * Note that this may cause the tray icon to disappear
+         * if it wasn't cloned somewhere else or referenced by JS.
+         */
+        static async removeById(id) {
+            return invoke('plugin:tray|remove_by_id', { id });
+        }
+        /**
+         * Creates a new {@linkcode TrayIcon}
+         *
+         * #### Platform-specific:
+         *
+         * - **Linux:** Sometimes the icon won't be visible unless a menu is set.
+         * Setting an empty {@linkcode Menu} is enough.
+         */
+        static async new(options) {
+            if (options === null || options === void 0 ? void 0 : options.menu) {
+                // @ts-expect-error we only need the rid and kind
+                options.menu = [options.menu.rid, options.menu.kind];
+            }
+            if (options === null || options === void 0 ? void 0 : options.icon) {
+                options.icon = transformImage(options.icon);
+            }
+            const handler = new Channel();
+            if (options === null || options === void 0 ? void 0 : options.action) {
+                const action = options.action;
+                handler.onmessage = (e) => action(mapEvent(e));
+                delete options.action;
+            }
+            return invoke('plugin:tray|new', {
+                options: options !== null && options !== void 0 ? options : {},
+                handler
+            }).then(([rid, id]) => new TrayIcon(rid, id));
+        }
+        /**
+         *  Sets a new tray icon. If `null` is provided, it will remove the icon.
+         *
+         * Note that you may need the `image-ico` or `image-png` Cargo features to use this API.
+         * To enable it, change your Cargo.toml file:
+         * ```toml
+         * [dependencies]
+         * tauri = { version = "...", features = ["...", "image-png"] }
+         * ```
+         */
+        async setIcon(icon) {
+            let trayIcon = null;
+            if (icon) {
+                trayIcon = transformImage(icon);
+            }
+            return invoke('plugin:tray|set_icon', { rid: this.rid, icon: trayIcon });
+        }
+        /**
+         * Sets a new tray menu.
+         *
+         * #### Platform-specific:
+         *
+         * - **Linux**: once a menu is set it cannot be removed so `null` has no effect
+         */
+        async setMenu(menu) {
+            if (menu) {
+                // @ts-expect-error we only need the rid and kind
+                menu = [menu.rid, menu.kind];
+            }
+            return invoke('plugin:tray|set_menu', { rid: this.rid, menu });
+        }
+        /**
+         * Sets the tooltip for this tray icon.
+         *
+         * #### Platform-specific:
+         *
+         * - **Linux:** Unsupported
+         */
+        async setTooltip(tooltip) {
+            return invoke('plugin:tray|set_tooltip', { rid: this.rid, tooltip });
+        }
+        /**
+         * Sets the tooltip for this tray icon.
+         *
+         * #### Platform-specific:
+         *
+         * - **Linux:** The title will not be shown unless there is an icon
+         * as well.  The title is useful for numerical and other frequently
+         * updated information.  In general, it shouldn't be shown unless a
+         * user requests it as it can take up a significant amount of space
+         * on the user's panel.  This may not be shown in all visualizations.
+         * - **Windows:** Unsupported
+         */
+        async setTitle(title) {
+            return invoke('plugin:tray|set_title', { rid: this.rid, title });
+        }
+        /** Show or hide this tray icon. */
+        async setVisible(visible) {
+            return invoke('plugin:tray|set_visible', { rid: this.rid, visible });
+        }
+        /**
+         * Sets the tray icon temp dir path. **Linux only**.
+         *
+         * On Linux, we need to write the icon to the disk and usually it will
+         * be `$XDG_RUNTIME_DIR/tray-icon` or `$TEMP/tray-icon`.
+         */
+        async setTempDirPath(path) {
+            return invoke('plugin:tray|set_temp_dir_path', { rid: this.rid, path });
+        }
+        /** Sets the current icon as a [template](https://developer.apple.com/documentation/appkit/nsimage/1520017-template?language=objc). **macOS only** */
+        async setIconAsTemplate(asTemplate) {
+            return invoke('plugin:tray|set_icon_as_template', {
+                rid: this.rid,
+                asTemplate
+            });
+        }
+        /**
+         *  Disable or enable showing the tray menu on left click.
+         *
+         * #### Platform-specific:
+         *
+         * - **Linux**: Unsupported.
+         *
+         * @deprecated use {@linkcode TrayIcon.setShowMenuOnLeftClick} instead.
+         */
+        async setMenuOnLeftClick(onLeft) {
+            return invoke('plugin:tray|set_show_menu_on_left_click', {
+                rid: this.rid,
+                onLeft
+            });
+        }
+        /**
+         *  Disable or enable showing the tray menu on left click.
+         *
+         * #### Platform-specific:
+         *
+         * - **Linux**: Unsupported.
+         *
+         * @since 2.2.0
+         */
+        async setShowMenuOnLeftClick(onLeft) {
+            return invoke('plugin:tray|set_show_menu_on_left_click', {
+                rid: this.rid,
+                onLeft
+            });
+        }
+    }
+    function mapEvent(e) {
+        const out = e;
+        out.position = new PhysicalPosition(e.position);
+        out.rect.position = new PhysicalPosition(e.rect.position);
+        out.rect.size = new PhysicalSize(e.rect.size);
+        return out;
     }
 
     var $L0;
@@ -1116,46 +2420,9 @@
     var $d_J = new $TypeData().initPrim(null, "J", "long", $ac_J, (void 0));
     var $d_F = new $TypeData().initPrim(0.0, "F", "float", $ac_F, Float32Array);
     var $d_D = new $TypeData().initPrim(0.0, "D", "double", $ac_D, Float64Array);
-    function $s_LFront__main__AT__V(args) {
-      var this$1 = $m_LFront$();
+    function $s_LTray__main__AT__V(args) {
+      var this$1 = $m_LTray$();
       $f_Lcats_effect_IOApp__main__AT__V(this$1, args);
-    }
-    /** @constructor */
-    function $c_LTauriUtil$() {
-    }
-    $c_LTauriUtil$.prototype = new $h_O();
-    $c_LTauriUtil$.prototype.constructor = $c_LTauriUtil$;
-    $c_LTauriUtil$.prototype;
-    $c_LTauriUtil$.prototype.handle__sjs_js_Promise__T__F1__V = (function(p, emsg, f) {
-      $n($m_sjs_js_Thenable$ThenableOps$().toFuture$extension__sjs_js_Thenable__s_concurrent_Future(p)).onComplete__F1__s_concurrent_ExecutionContext__V(new $c_sjsr_AnonFunction1(((tryA) => {
-        var tryA$1 = $as_s_util_Try(tryA);
-        matchResult1: {
-          if ((tryA$1 instanceof $c_s_util_Success)) {
-            var a = $n($as_s_util_Success(tryA$1)).s_util_Success__f_value;
-            $n(f).apply__O__O(a);
-            break matchResult1;
-          }
-          throw $ct_jl_Exception__T__(new $c_jl_Exception(), emsg);
-        }
-      })), $m_s_concurrent_ExecutionContext$().global__s_concurrent_ExecutionContextExecutor());
-    });
-    $c_LTauriUtil$.prototype.toIO__sjs_js_Promise__Lcats_effect_IO = (function(p) {
-      var this$3 = $m_Lcats_effect_IO$();
-      var this$2 = $m_Lcats_effect_IO$();
-      var thunk = new $c_sjsr_AnonFunction0((() => $m_sjs_js_Thenable$ThenableOps$().toFuture$extension__sjs_js_Thenable__s_concurrent_Future(p)));
-      var fut = this$2.delay__F0__Lcats_effect_IO(thunk);
-      var this$4 = $n(this$3.Lcats_effect_IO$__f__asyncForIO);
-      return $as_Lcats_effect_IO($f_Lcats_effect_kernel_Async__fromFuture__O__O(this$4, fut));
-    });
-    new $TypeData().initClass($c_LTauriUtil$, "TauriUtil$", ({
-      LTauriUtil$: 1
-    }));
-    var $n_LTauriUtil$;
-    function $m_LTauriUtil$() {
-      if ((!$n_LTauriUtil$)) {
-        $n_LTauriUtil$ = new $c_LTauriUtil$();
-      }
-      return $n_LTauriUtil$;
     }
     /** @constructor */
     function $c_Lcats_effect_ContState$() {
@@ -1223,7 +2490,7 @@
     }
     function $f_Lcats_effect_IOApp__main__AT__V($thiz, args) {
       var keepAlive$lzy1 = new $c_sr_LazyRef();
-      if (($thiz.LFront$__f_cats$effect$IOApp$$_runtime === null)) {
+      if (($thiz.LTray$__f_cats$effect$IOApp$$_runtime === null)) {
         var this$1 = $m_Lcats_effect_unsafe_IORuntime$();
         if ((this$1.Lcats_effect_unsafe_IORuntimeCompanionPlatform__f__global === null)) {
           $m_Lcats_effect_unsafe_IORuntime$();
@@ -1231,7 +2498,7 @@
           var batchSize = 64;
           var reportFailure = new $c_sjsr_AnonFunction1(((t) => {
             var t$1 = $as_jl_Throwable(t);
-            $n($f_Lcats_effect_IOApp__reportFailure__jl_Throwable__Lcats_effect_IO($thiz, t$1)).unsafeRunAndForgetWithoutCallback__Lcats_effect_unsafe_IORuntime__V($thiz.LFront$__f_cats$effect$IOApp$$_runtime);
+            $n($f_Lcats_effect_IOApp__reportFailure__jl_Throwable__Lcats_effect_IO($thiz, t$1)).unsafeRunAndForgetWithoutCallback__Lcats_effect_unsafe_IORuntime__V($thiz.LTray$__f_cats$effect$IOApp$$_runtime);
           }));
           var compute = new $c_Lcats_effect_unsafe_BatchingMacrotaskExecutor(batchSize, reportFailure);
           var $x_3 = $m_Lcats_effect_unsafe_IORuntime$();
@@ -1246,12 +2513,12 @@
         } else {
           var installed = false;
         }
-        $thiz.LFront$__f_cats$effect$IOApp$$_runtime = $m_Lcats_effect_unsafe_IORuntime$().global__Lcats_effect_unsafe_IORuntime();
+        $thiz.LTray$__f_cats$effect$IOApp$$_runtime = $m_Lcats_effect_unsafe_IORuntime$().global__Lcats_effect_unsafe_IORuntime();
         var installed$2 = installed;
       } else {
         var this$6 = $m_Lcats_effect_unsafe_IORuntime$();
         if ((this$6.Lcats_effect_unsafe_IORuntimeCompanionPlatform__f__global === null)) {
-          this$6.Lcats_effect_unsafe_IORuntimeCompanionPlatform__f__global = $thiz.LFront$__f_cats$effect$IOApp$$_runtime;
+          this$6.Lcats_effect_unsafe_IORuntimeCompanionPlatform__f__global = $thiz.LTray$__f_cats$effect$IOApp$$_runtime;
           var installed$2 = true;
         } else {
           var installed$2 = false;
@@ -1262,7 +2529,7 @@
       }
       if ($m_Lcats_effect_tracing_TracingConstants$().Lcats_effect_tracing_TracingConstants$__f_isStackTracing) {
         var listener = (() => {
-          $n($n($thiz.LFront$__f_cats$effect$IOApp$$_runtime).Lcats_effect_unsafe_IORuntime__f_fiberMonitor).liveFiberSnapshot__F1__V(new $c_sjsr_AnonFunction1(((_$1) => {
+          $n($n($thiz.LTray$__f_cats$effect$IOApp$$_runtime).Lcats_effect_unsafe_IORuntime__f_fiberMonitor).liveFiberSnapshot__F1__V(new $c_sjsr_AnonFunction1(((_$1) => {
             var _$1$1 = $as_T(_$1);
             $n($m_jl_System$Streams$().jl_System$Streams$__f_err).print__T__V(_$1$1);
           })));
@@ -1365,7 +2632,7 @@
       })), new $c_sjsr_AnonFunction1(((c) => {
         var c$1 = $as_Lcats_effect_ExitCode(c);
         $n(hardExit).apply__O__O($n(c$1).Lcats_effect_ExitCode__f_code);
-      })), ($n(\u03b41$), true), $thiz.LFront$__f_cats$effect$IOApp$$_runtime);
+      })), ($n(\u03b41$), true), $thiz.LTray$__f_cats$effect$IOApp$$_runtime);
       try {
         process.exit = $m_sjs_js_Any$().fromFunction1__F1__sjs_js_Function1(new $c_sjsr_AnonFunction1(((v1$2) => {
           var _$3 = $uI(v1$2);
@@ -1411,7 +2678,7 @@
     }
     function $p_Lcats_effect_IOApp__gracefulExit$1__F1__sr_IntRef__Lcats_effect_IOFiber__I__V($thiz, hardExit$4, cancelCode$2, fiber$1, code) {
       matchResult2: {
-        var x22 = $n($n($thiz.LFront$__f_cats$effect$IOApp$$_runtime).Lcats_effect_unsafe_IORuntime__f_config).Lcats_effect_unsafe_IORuntimeConfig__f_shutdownHookTimeout;
+        var x22 = $n($n($thiz.LTray$__f_cats$effect$IOApp$$_runtime).Lcats_effect_unsafe_IORuntime__f_config).Lcats_effect_unsafe_IORuntimeConfig__f_shutdownHookTimeout;
         var x = $m_s_concurrent_duration_Duration$().s_concurrent_duration_Duration$__f_Zero;
         if (((x === null) ? (x22 === null) : $n(x).equals__O__Z(x22))) {
           $n(hardExit$4).apply__O__O(code);
@@ -1427,7 +2694,7 @@
       }
       var ev$1 = code;
       $n(cancelCode$2).sr_IntRef__f_elem = ev$1;
-      $n($n(fiber$1).cancel__Lcats_effect_IO()).unsafeRunAndForget__Lcats_effect_unsafe_IORuntime__V($thiz.LFront$__f_cats$effect$IOApp$$_runtime);
+      $n($n(fiber$1).cancel__Lcats_effect_IO()).unsafeRunAndForget__Lcats_effect_unsafe_IORuntime__V($thiz.LTray$__f_cats$effect$IOApp$$_runtime);
     }
     /** @constructor */
     function $c_Lcats_effect_IOCompanionPlatform() {
@@ -3215,8 +4482,10 @@
     }
     /** @constructor */
     function $c_jl_System$Streams$() {
+      this.jl_System$Streams$__f_out = null;
       this.jl_System$Streams$__f_err = null;
       $n_jl_System$Streams$ = this;
+      this.jl_System$Streams$__f_out = new $c_jl_JSConsoleBasedPrintStream(false);
       this.jl_System$Streams$__f_err = new $c_jl_JSConsoleBasedPrintStream(true);
     }
     $c_jl_System$Streams$.prototype = new $h_O();
@@ -8437,6 +9706,36 @@
       return $n_sjs_concurrent_QueueExecutionContext$;
     }
     /** @constructor */
+    function $c_sjs_js_JSConverters$JSRichIterableOnce$() {
+    }
+    $c_sjs_js_JSConverters$JSRichIterableOnce$.prototype = new $h_O();
+    $c_sjs_js_JSConverters$JSRichIterableOnce$.prototype.constructor = $c_sjs_js_JSConverters$JSRichIterableOnce$;
+    $c_sjs_js_JSConverters$JSRichIterableOnce$.prototype;
+    $c_sjs_js_JSConverters$JSRichIterableOnce$.prototype.toJSArray$extension__sc_IterableOnce__sjs_js_Array = (function(this$) {
+      if ((this$ instanceof $c_sjs_js_WrappedArray)) {
+        var x2 = $as_sjs_js_WrappedArray(this$);
+        return $n(x2).sjs_js_WrappedArray__f_scala$scalajs$js$WrappedArray$$array;
+      } else {
+        var result = [];
+        var this$2 = $n($n(this$).iterator__sc_Iterator());
+        while (this$2.hasNext__Z()) {
+          var arg1 = this$2.next__O();
+          $uI(result.push(arg1));
+        }
+        return result;
+      }
+    });
+    new $TypeData().initClass($c_sjs_js_JSConverters$JSRichIterableOnce$, "scala.scalajs.js.JSConverters$JSRichIterableOnce$", ({
+      sjs_js_JSConverters$JSRichIterableOnce$: 1
+    }));
+    var $n_sjs_js_JSConverters$JSRichIterableOnce$;
+    function $m_sjs_js_JSConverters$JSRichIterableOnce$() {
+      if ((!$n_sjs_js_JSConverters$JSRichIterableOnce$)) {
+        $n_sjs_js_JSConverters$JSRichIterableOnce$ = new $c_sjs_js_JSConverters$JSRichIterableOnce$();
+      }
+      return $n_sjs_js_JSConverters$JSRichIterableOnce$;
+    }
+    /** @constructor */
     function $c_sjs_js_Thenable$ThenableOps$() {
     }
     $c_sjs_js_Thenable$ThenableOps$.prototype = new $h_O();
@@ -8571,6 +9870,20 @@
       }
       return $n_s_sys_package$;
     }
+    /** @constructor */
+    function $c_s_util_DynamicVariable(init) {
+      this.s_util_DynamicVariable__f_v = null;
+      this.s_util_DynamicVariable__f_v = init;
+    }
+    $c_s_util_DynamicVariable.prototype = new $h_O();
+    $c_s_util_DynamicVariable.prototype.constructor = $c_s_util_DynamicVariable;
+    $c_s_util_DynamicVariable.prototype;
+    $c_s_util_DynamicVariable.prototype.toString__T = (function() {
+      return (("DynamicVariable(" + this.s_util_DynamicVariable__f_v) + ")");
+    });
+    new $TypeData().initClass($c_s_util_DynamicVariable, "scala.util.DynamicVariable", ({
+      s_util_DynamicVariable: 1
+    }));
     function $f_s_util_control_NoStackTrace__fillInStackTrace__jl_Throwable($thiz) {
       var this$1 = $m_s_util_control_NoStackTrace$();
       if (this$1.s_util_control_NoStackTrace$__f__noSuppression) {
@@ -9205,179 +10518,105 @@
       }
     });
     /** @constructor */
-    function $c_Lscalatags_Escaping$() {
-      this.Lscalatags_Escaping$__f_tagRegex = null;
-      $n_Lscalatags_Escaping$ = this;
-      this.Lscalatags_Escaping$__f_tagRegex = $ct_s_util_matching_Regex__T__sci_Seq__(new $c_s_util_matching_Regex(), "^[a-z][:\\w0-9-]*$", $m_sci_Nil$());
-    }
-    $c_Lscalatags_Escaping$.prototype = new $h_O();
-    $c_Lscalatags_Escaping$.prototype.constructor = $c_Lscalatags_Escaping$;
-    $c_Lscalatags_Escaping$.prototype;
-    $c_Lscalatags_Escaping$.prototype.validTag__T__Z = (function(s) {
-      var this$1$1 = $n($n(this.Lscalatags_Escaping$__f_tagRegex).unapplySeq__jl_CharSequence__s_Option(s));
-      return (!this$1$1.isEmpty__Z());
-    });
-    $c_Lscalatags_Escaping$.prototype.validAttrName__T__Z = (function(s) {
-      var this$1 = $n(s);
-      var len = this$1.length;
-      if ((len === 0)) {
-        return false;
-      }
-      var this$2 = $n(s);
-      var sc = $charAt(this$2, 0);
-      var startCharValid = ((((sc >= 97) && (sc <= 122)) || ((sc >= 65) && (sc <= 90))) || (sc === 58));
-      if ((!startCharValid)) {
-        return false;
-      }
-      var pos = 1;
-      while ((pos < len)) {
-        var this$3 = $n(s);
-        var index = pos;
-        var c = $charAt(this$3, index);
-        var valid = ((((((((c >= 97) && (c <= 122)) || ((c >= 65) && (c <= 90))) || ((c >= 48) && (c <= 57))) || (c === 45)) || (c === 58)) || (c === 46)) || (c === 95));
-        if ((!valid)) {
-          return false;
-        }
-        pos = ((1 + pos) | 0);
-      }
-      return true;
-    });
-    new $TypeData().initClass($c_Lscalatags_Escaping$, "scalatags.Escaping$", ({
-      Lscalatags_Escaping$: 1
-    }));
-    var $n_Lscalatags_Escaping$;
-    function $m_Lscalatags_Escaping$() {
-      if ((!$n_Lscalatags_Escaping$)) {
-        $n_Lscalatags_Escaping$ = new $c_Lscalatags_Escaping$();
-      }
-      return $n_Lscalatags_Escaping$;
-    }
-    function $is_Lscalatags_generic_Modifier(obj) {
-      return (!(!((obj && obj.$classData) && obj.$classData.ancestors.Lscalatags_generic_Modifier)));
-    }
-    function $as_Lscalatags_generic_Modifier(obj) {
-      return (($is_Lscalatags_generic_Modifier(obj) || (obj === null)) ? obj : $throwClassCastException(obj, "scalatags.generic.Modifier"));
-    }
-    var $d_Lscalatags_generic_Modifier = new $TypeData().initClass(1, "scalatags.generic.Modifier", ({
-      Lscalatags_generic_Modifier: 1
-    }));
-    function $is_Lscalatags_generic_Namespace(obj) {
-      return (!(!((obj && obj.$classData) && obj.$classData.ancestors.Lscalatags_generic_Namespace)));
-    }
-    function $as_Lscalatags_generic_Namespace(obj) {
-      return (($is_Lscalatags_generic_Namespace(obj) || (obj === null)) ? obj : $throwClassCastException(obj, "scalatags.generic.Namespace"));
-    }
-    /** @constructor */
-    function $c_Lscalatags_generic_Namespace$() {
-      this.Lscalatags_generic_Namespace$__f_htmlNamespaceConfig = null;
-      $n_Lscalatags_generic_Namespace$ = this;
-      this.Lscalatags_generic_Namespace$__f_htmlNamespaceConfig = new $c_Lscalatags_generic_Namespace$$anon$1();
-    }
-    $c_Lscalatags_generic_Namespace$.prototype = new $h_O();
-    $c_Lscalatags_generic_Namespace$.prototype.constructor = $c_Lscalatags_generic_Namespace$;
-    $c_Lscalatags_generic_Namespace$.prototype;
-    new $TypeData().initClass($c_Lscalatags_generic_Namespace$, "scalatags.generic.Namespace$", ({
-      Lscalatags_generic_Namespace$: 1
-    }));
-    var $n_Lscalatags_generic_Namespace$;
-    function $m_Lscalatags_generic_Namespace$() {
-      if ((!$n_Lscalatags_generic_Namespace$)) {
-        $n_Lscalatags_generic_Namespace$ = new $c_Lscalatags_generic_Namespace$();
-      }
-      return $n_Lscalatags_generic_Namespace$;
-    }
-    function $p_LFront$__submitHandler$1__Lorg_scalajs_dom_HTMLInputElement__Z__Lorg_scalajs_dom_HTMLParagraphElement__Lorg_scalajs_dom_Event__V($thiz, nameInput$1, notiFlag$2, greetMsg$1, e) {
-      e.preventDefault();
-      var $x_2 = $m_LTauriUtil$();
-      var $x_1 = $m_sr_ScalaRunTime$();
-      var y = $as_T(nameInput$1.value);
-      var properties = $x_1.wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([new $c_T2("name", y)]));
-      var args$proxy1 = $m_sjs_js_special_package$().objectLiteral__sci_Seq__sjs_js_Object(properties);
-      $x_2.handle__sjs_js_Promise__T__F1__V(invoke$1("greet", args$proxy1), "Failed to get message from 'greet'", new $c_sjsr_AnonFunction1(((msg) => {
-        var msg$1 = $as_T(msg);
-        if (notiFlag$2) {
-          var fields = $m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([new $c_T2("title", "Scala.js with Tauri")]));
-          var _\uff3fobj = $m_sjs_js_special_package$().objectLiteral__sci_Seq__sjs_js_Object(fields);
-          _\uff3fobj.body = msg$1;
-          sendNotification(_\uff3fobj);
-        } else {
-          greetMsg$1.textContent = msg$1;
-        }
-      })));
-    }
-    /** @constructor */
-    function $c_LFront$() {
-      this.LFront$__f_cats$effect$IOApp$$_runtime = null;
-      $n_LFront$ = this;
-      this.LFront$__f_cats$effect$IOApp$$_runtime = null;
+    function $c_LTray$() {
+      this.LTray$__f_cats$effect$IOApp$$_runtime = null;
+      $n_LTray$ = this;
+      this.LTray$__f_cats$effect$IOApp$$_runtime = null;
       $m_s_concurrent_ExecutionContext$().global__s_concurrent_ExecutionContextExecutor();
     }
-    $c_LFront$.prototype = new $h_O();
-    $c_LFront$.prototype.constructor = $c_LFront$;
-    $c_LFront$.prototype;
-    $c_LFront$.prototype.run__sci_List__Lcats_effect_IO = (function(as) {
-      return $n($m_LTauriUtil$().toIO__sjs_js_Promise__Lcats_effect_IO(getTauriVersion())).flatMap__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((tauriVersion) => {
-        var tauriVersion$1 = $as_T(tauriVersion);
-        return $n($m_LTauriUtil$().toIO__sjs_js_Promise__Lcats_effect_IO(isPermissionGranted())).flatMap__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((notiFlag) => {
-          var notiFlag$1 = $uZ(notiFlag);
-          var this$1 = $m_Lcats_effect_IO$();
-          var thunk = new $c_sjsr_AnonFunction0((() => document.body.appendChild($n($m_LFront$().content__T__Z__Lscalatags_JsDom$TypedTag(tauriVersion$1, notiFlag$1)).render__Lorg_scalajs_dom_Element())));
-          return $n(this$1.delay__F0__Lcats_effect_IO(thunk)).map__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((x$1) => $m_Lcats_effect_ExitCode$().Lcats_effect_ExitCode$__f_Success)));
-        })));
-      })));
+    $c_LTray$.prototype = new $h_O();
+    $c_LTray$.prototype.constructor = $c_LTray$;
+    $c_LTray$.prototype;
+    $c_LTray$.prototype.toIO__sjs_js_Promise__Lcats_effect_IO = (function(p) {
+      var this$3 = $m_Lcats_effect_IO$();
+      var this$2 = $m_Lcats_effect_IO$();
+      var thunk = new $c_sjsr_AnonFunction0((() => $m_sjs_js_Thenable$ThenableOps$().toFuture$extension__sjs_js_Thenable__s_concurrent_Future(p)));
+      var fut = this$2.delay__F0__Lcats_effect_IO(thunk);
+      var this$4 = $n(this$3.Lcats_effect_IO$__f__asyncForIO);
+      return $as_Lcats_effect_IO($f_Lcats_effect_kernel_Async__fromFuture__O__O(this$4, fut));
     });
-    $c_LFront$.prototype.content__T__Z__Lscalatags_JsDom$TypedTag = (function(tauriVersion, notiFlag) {
-      var nameInput = $n($n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().input__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().id__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("greet-input", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($m_Lscalatags_JsDom$all$().placeholder__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("Enter a name...", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr)])))).render__Lorg_scalajs_dom_Element();
-      var greetMsg = $n($n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().p__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().id__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("greet-msg", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr)])))).render__Lorg_scalajs_dom_Element();
-      var this$2 = $m_Lscalatags_JsDom$all$();
-      $m_Lscalatags_JsDom$all$();
-      var void$1 = false;
-      var ns = $m_Lscalatags_generic_Namespace$().Lscalatags_generic_Namespace$__f_htmlNamespaceConfig;
-      var $x_18 = $n($as_Lscalatags_JsDom$TypedTag($f_Lscalatags_jsdom_TagFactory__typedTag__T__Z__Lscalatags_generic_Namespace__Lscalatags_generic_TypedTag(this$2, "main", void$1, ns)));
-      var $x_17 = $m_sr_ScalaRunTime$();
-      var $x_16 = $n($m_Lscalatags_JsDom$all$().cls__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("container", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr);
-      var this$4 = $n($m_Lscalatags_JsDom$all$().h1__Lscalatags_generic_TypedTag());
-      var $x_14 = $m_sr_ScalaRunTime$();
-      $m_Lscalatags_JsDom$all$();
-      var v = (("Welcome to Tauri (" + tauriVersion) + ")");
-      var xs = $x_14.wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([new $c_Lscalatags_JsDom$StringFrag(v)]));
-      var $x_15 = this$4.apply__sci_Seq__Lscalatags_JsDom$TypedTag(xs);
-      var $x_13 = $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().div__Lscalatags_generic_TypedTag()));
-      var $x_12 = $m_sr_ScalaRunTime$();
-      $m_Lscalatags_JsDom$all$();
-      var v$1 = ("notification enabled : " + notiFlag);
-      var $x_11 = $x_13.apply__sci_Seq__Lscalatags_JsDom$TypedTag($x_12.wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([new $c_Lscalatags_JsDom$StringFrag(v$1)])));
-      var $x_10 = $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().div__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().cls__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("row", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().a__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().href__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("https://tauri.app", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($m_Lscalatags_JsDom$all$().target__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("_blank", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().img__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().src__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("/assets/tauri.svg", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($m_Lscalatags_JsDom$all$().cls__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("logo tauri", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($m_Lscalatags_JsDom$all$().alt__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("Tauri logo", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr)])))]))), $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().a__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().href__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("https://developer.mozilla.org/en-US/docs/Web/JavaScript", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($m_Lscalatags_JsDom$all$().target__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("_blank", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().img__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().src__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("/assets/javascript.svg", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($m_Lscalatags_JsDom$all$().cls__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("logo vanilla", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), $n($m_Lscalatags_JsDom$all$().alt__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("JavaScript logo", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr)])))])))])));
-      var $x_9 = $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().p__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([($m_Lscalatags_JsDom$all$(), new $c_Lscalatags_JsDom$StringFrag("Click on the Tauri logo to learn more about the framework"))])));
-      var $x_8 = $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().form__Lscalatags_generic_TypedTag()));
-      var $x_7 = $m_sr_ScalaRunTime$();
-      var $x_6 = $n($m_Lscalatags_JsDom$all$().cls__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("row", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr);
-      var $x_5 = $n($m_Lscalatags_JsDom$all$().id__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("greet-form", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr);
-      var $x_4 = $n($m_Lscalatags_JsDom$all$().onsubmit__Lscalatags_generic_Attr());
-      var $x_3 = new $c_sjsr_AnonFunction1(((e) => {
-        $p_LFront$__submitHandler$1__Lorg_scalajs_dom_HTMLInputElement__Z__Lorg_scalajs_dom_HTMLParagraphElement__Lorg_scalajs_dom_Event__V(this, nameInput, notiFlag, greetMsg, e);
-      }));
-      $m_Lscalatags_JsDom$all$();
-      var ev = new $c_sjsr_AnonFunction1(((f) => {
-        var f$1 = $as_F1(f);
-        return $m_sjs_js_Any$().fromFunction1__F1__sjs_js_Function1(f$1);
-      }));
-      var $x_2 = $x_4.$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair($x_3, new $c_Lscalatags_LowPriorityImplicits$$anon$2(ev));
-      var this$9 = $m_Lscalatags_JsDom$all$();
-      var $x_1 = $x_8.apply__sci_Seq__Lscalatags_JsDom$TypedTag($x_7.wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$x_6, $x_5, $x_2, new $c_Lscalatags_LowPriorityImplicits$bindNode(this$9, nameInput), $n($as_Lscalatags_JsDom$TypedTag($m_Lscalatags_JsDom$all$().button__Lscalatags_generic_TypedTag())).apply__sci_Seq__Lscalatags_JsDom$TypedTag($m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$n($m_Lscalatags_JsDom$all$().type__Lscalatags_generic_Attr()).$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair("submit", $m_Lscalatags_JsDom$all$().Lscalatags_JsDom$all$__f_stringAttr), ($m_Lscalatags_JsDom$all$(), new $c_Lscalatags_JsDom$StringFrag("Greet"))])))])));
-      var this$11 = $m_Lscalatags_JsDom$all$();
-      return $x_18.apply__sci_Seq__Lscalatags_JsDom$TypedTag($x_17.wrapRefArray__AO__sci_ArraySeq(new ($d_Lscalatags_generic_Modifier.getArrayOf().constr)([$x_16, $x_15, $x_11, $x_10, $x_9, $x_1, new $c_Lscalatags_LowPriorityImplicits$bindNode(this$11, greetMsg)])));
+    $c_LTray$.prototype.run__sci_List__Lcats_effect_IO = (function(as) {
+      var this$2 = $n(this.tray__Lcats_effect_IO());
+      var this$1$1 = $m_Lcats_effect_IO$();
+      var thunk = new $c_sjsr_AnonFunction0((() => $m_Lcats_effect_ExitCode$().Lcats_effect_ExitCode$__f_Success));
+      var that = this$1$1.delay__F0__Lcats_effect_IO(thunk);
+      return this$2.productR__Lcats_effect_IO__Lcats_effect_IO(that);
     });
-    new $TypeData().initClass($c_LFront$, "Front$", ({
-      LFront$: 1,
+    $c_LTray$.prototype.trayMenu__sjs_js_Promise = (function() {
+      var x$proxy1 = new $c_T3("tauri", "Tauri", "https://tauri.app");
+      var x$proxy2 = new $c_T3("scala", "Scala", "https://scala-lang.org");
+      var x$proxy3 = new $c_T3("scala.js", "Scala.js", "https://scala-js.org");
+      var menus = new $c_sci_$colon$colon(x$proxy1, new $c_sci_$colon$colon(x$proxy2, new $c_sci_$colon$colon(x$proxy3, $m_sci_Nil$())));
+      var f = ((mi) => {
+        var mi$1 = $as_T3(mi);
+        var text$proxy1 = $as_T($n(mi$1).T3__f__2);
+        var fields = $m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([new $c_T2("text", text$proxy1)]));
+        var _\uff3fobj = $m_sjs_js_special_package$().objectLiteral__sci_Seq__sjs_js_Object(fields);
+        var value$proxy1 = $as_T($n(mi$1).T3__f__1);
+        _\uff3fobj.id = value$proxy1;
+        var url$1 = $as_T($n(mi$1).T3__f__3);
+        var value$proxy2 = new $c_sjsr_AnonFunction1(((id) => {
+          var id$1 = $as_T(id);
+          $m_LTray$().trayMenuHandler__T__T__V(url$1, id$1);
+        }));
+        var value = $m_sjs_js_Any$().fromFunction1__F1__sjs_js_Function1(value$proxy2);
+        _\uff3fobj.action = value;
+        return _\uff3fobj;
+      });
+      if ((menus === $m_sci_Nil$())) {
+        var menuItems = $m_sci_Nil$();
+      } else {
+        var arg1 = menus.sci_$colon$colon__f_head;
+        var h = new $c_sci_$colon$colon(f(arg1), $m_sci_Nil$());
+        var t = h;
+        var rest = menus.sci_$colon$colon__f_next;
+        while ((rest !== $m_sci_Nil$())) {
+          var arg1$1 = $n(rest).head__O();
+          var nx = new $c_sci_$colon$colon(f(arg1$1), $m_sci_Nil$());
+          $n(t).sci_$colon$colon__f_next = nx;
+          t = nx;
+          rest = $as_sci_List($n(rest).tail__O());
+        }
+        var menuItems = h;
+      }
+      var fields$1 = $m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([]));
+      var _\uff3fobj$1 = $m_sjs_js_special_package$().objectLiteral__sci_Seq__sjs_js_Object(fields$1);
+      var value$proxy3 = $m_sjs_js_JSConverters$JSRichIterableOnce$().toJSArray$extension__sc_IterableOnce__sjs_js_Array(menuItems);
+      _\uff3fobj$1.items = value$proxy3;
+      return Menu.new(_\uff3fobj$1);
+    });
+    $c_LTray$.prototype.trayMenuHandler__T__T__V = (function(url, id) {
+      var x = ((("selected " + id) + ": open ") + url);
+      var this$2 = $m_s_Console$();
+      $n(this$2.out__Ljava_io_PrintStream()).println__O__V(x);
+    });
+    $c_LTray$.prototype.tray__Lcats_effect_IO = (function() {
+      return $n(this.toIO__sjs_js_Promise__Lcats_effect_IO(defaultWindowIcon())).flatMap__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((icon) => $n($n($m_LTray$().toIO__sjs_js_Promise__Lcats_effect_IO($m_LTray$().trayMenu__sjs_js_Promise())).map__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((menu) => {
+        var fields = $m_sr_ScalaRunTime$().wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([]));
+        var _\uff3fobj = $m_sjs_js_special_package$().objectLiteral__sci_Seq__sjs_js_Object(fields);
+        _\uff3fobj.icon = icon;
+        _\uff3fobj.menu = menu;
+        return new $c_T2(menu, _\uff3fobj);
+      })))).map__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((x$1) => {
+        var x$1$1 = $as_T2(x$1);
+        if ((x$1$1 !== null)) {
+          $n(x$1$1);
+          var trayOption = $n(x$1$1).T2__f__2;
+          return $m_LTray$().toIO__sjs_js_Promise__Lcats_effect_IO(TrayIcon.new(trayOption));
+        }
+        throw new $c_s_MatchError(x$1$1);
+      }))))));
+    });
+    new $TypeData().initClass($c_LTray$, "Tray$", ({
+      LTray$: 1,
       Lcats_effect_IOApp: 1
     }));
-    var $n_LFront$;
-    function $m_LFront$() {
-      if ((!$n_LFront$)) {
-        $n_LFront$ = new $c_LFront$();
+    var $n_LTray$;
+    function $m_LTray$() {
+      if ((!$n_LTray$)) {
+        $n_LTray$ = new $c_LTray$();
       }
-      return $n_LFront$;
+      return $n_LTray$;
     }
     /** @constructor */
     function $c_Lcats_Show$ToShowOps$$anon$3(target$1, tc$1) {
@@ -12658,11 +13897,6 @@
     $c_ju_regex_Matcher.prototype = new $h_O();
     $c_ju_regex_Matcher.prototype.constructor = $c_ju_regex_Matcher;
     $c_ju_regex_Matcher.prototype;
-    $c_ju_regex_Matcher.prototype.matches__Z = (function() {
-      $p_ju_regex_Matcher__resetMatch__ju_regex_Matcher(this);
-      this.ju_regex_Matcher__f_lastMatch = $n(this.ju_regex_Matcher__f_pattern0).execMatches__T__O(this.ju_regex_Matcher__f_inputstr);
-      return (this.ju_regex_Matcher__f_lastMatch !== null);
-    });
     $c_ju_regex_Matcher.prototype.find__Z = (function() {
       var this$1$1 = $n(this.ju_regex_Matcher__f_pattern0);
       var input = this.ju_regex_Matcher__f_inputstr;
@@ -12815,21 +14049,16 @@
       this.ju_regex_Pattern__f_groupCount = 0;
       this.ju_regex_Pattern__f_groupNumberMap = null;
       this.ju_regex_Pattern__f_java$util$regex$Pattern$$jsRegExpForFind = null;
-      this.ju_regex_Pattern__f_jsRegExpForMatches = null;
       this.ju_regex_Pattern__f__pattern = _pattern;
       this.ju_regex_Pattern__f_java$util$regex$Pattern$$jsFlags = jsFlags;
       this.ju_regex_Pattern__f_java$util$regex$Pattern$$sticky = sticky;
       this.ju_regex_Pattern__f_groupCount = groupCount;
       this.ju_regex_Pattern__f_groupNumberMap = groupNumberMap;
       this.ju_regex_Pattern__f_java$util$regex$Pattern$$jsRegExpForFind = new RegExp(jsPattern, (this.ju_regex_Pattern__f_java$util$regex$Pattern$$jsFlags + (this.ju_regex_Pattern__f_java$util$regex$Pattern$$sticky ? "gy" : "g")));
-      this.ju_regex_Pattern__f_jsRegExpForMatches = new RegExp((("^(?:" + jsPattern) + ")$"), jsFlags);
     }
     $c_ju_regex_Pattern.prototype = new $h_O();
     $c_ju_regex_Pattern.prototype.constructor = $c_ju_regex_Pattern;
     $c_ju_regex_Pattern.prototype;
-    $c_ju_regex_Pattern.prototype.execMatches__T__O = (function(input) {
-      return this.ju_regex_Pattern__f_jsRegExpForMatches.exec(input);
-    });
     $c_ju_regex_Pattern.prototype.java$util$regex$Pattern$$execFindInternal__T__I__O = (function(input, start) {
       var regexp = this.ju_regex_Pattern__f_java$util$regex$Pattern$$jsRegExpForFind;
       regexp.lastIndex = start;
@@ -13015,6 +14244,29 @@
         $n_s_Array$ = new $c_s_Array$();
       }
       return $n_s_Array$;
+    }
+    /** @constructor */
+    function $c_s_Console$() {
+      this.s_Console$__f_outVar = null;
+      $n_s_Console$ = this;
+      this.s_Console$__f_outVar = new $c_s_util_DynamicVariable($m_jl_System$Streams$().jl_System$Streams$__f_out);
+    }
+    $c_s_Console$.prototype = new $h_O();
+    $c_s_Console$.prototype.constructor = $c_s_Console$;
+    $c_s_Console$.prototype;
+    $c_s_Console$.prototype.out__Ljava_io_PrintStream = (function() {
+      return $as_Ljava_io_PrintStream($n(this.s_Console$__f_outVar).s_util_DynamicVariable__f_v);
+    });
+    new $TypeData().initClass($c_s_Console$, "scala.Console$", ({
+      s_Console$: 1,
+      s_io_AnsiColor: 1
+    }));
+    var $n_s_Console$;
+    function $m_s_Console$() {
+      if ((!$n_s_Console$)) {
+        $n_s_Console$ = new $c_s_Console$();
+      }
+      return $n_s_Console$;
     }
     /** @constructor */
     function $c_s_LowPriorityImplicits() {
@@ -13868,216 +15120,6 @@
       s_util_hashing_MurmurHash3$accum$1: 1,
       F2: 1
     }));
-    function $ct_s_util_matching_Regex__ju_regex_Pattern__sci_Seq__($thiz, pattern, groupNames) {
-      $thiz.s_util_matching_Regex__f_pattern = pattern;
-      return $thiz;
-    }
-    function $ct_s_util_matching_Regex__T__sci_Seq__($thiz, regex, groupNames) {
-      $ct_s_util_matching_Regex__ju_regex_Pattern__sci_Seq__($thiz, $m_ju_regex_PatternCompiler$().compile__T__I__ju_regex_Pattern(regex, 0));
-      return $thiz;
-    }
-    /** @constructor */
-    function $c_s_util_matching_Regex() {
-      this.s_util_matching_Regex__f_pattern = null;
-    }
-    $c_s_util_matching_Regex.prototype = new $h_O();
-    $c_s_util_matching_Regex.prototype.constructor = $c_s_util_matching_Regex;
-    $c_s_util_matching_Regex.prototype;
-    $c_s_util_matching_Regex.prototype.unapplySeq__jl_CharSequence__s_Option = (function(s) {
-      var this$1$1 = $n(this.s_util_matching_Regex__f_pattern);
-      var m = new $c_ju_regex_Matcher(this$1$1, $dp_toString__T($n(s)));
-      if (m.matches__Z()) {
-        var n = $n(m.ju_regex_Matcher__f_pattern0).ju_regex_Pattern__f_groupCount;
-        var b = new $c_scm_ListBuffer();
-        var i = 0;
-        while ((i < n)) {
-          var arg1 = i;
-          var elem = m.group__I__T(((1 + arg1) | 0));
-          b.addOne__O__scm_ListBuffer(elem);
-          i = ((1 + i) | 0);
-        }
-        return new $c_s_Some(b.toList__sci_List());
-      } else {
-        return $m_s_None$();
-      }
-    });
-    $c_s_util_matching_Regex.prototype.toString__T = (function() {
-      return $n(this.s_util_matching_Regex__f_pattern).ju_regex_Pattern__f__pattern;
-    });
-    new $TypeData().initClass($c_s_util_matching_Regex, "scala.util.matching.Regex", ({
-      s_util_matching_Regex: 1,
-      Ljava_io_Serializable: 1
-    }));
-    /** @constructor */
-    function $c_Lscalatags_JsDom$GenericAttr() {
-    }
-    $c_Lscalatags_JsDom$GenericAttr.prototype = new $h_O();
-    $c_Lscalatags_JsDom$GenericAttr.prototype.constructor = $c_Lscalatags_JsDom$GenericAttr;
-    $c_Lscalatags_JsDom$GenericAttr.prototype;
-    $c_Lscalatags_JsDom$GenericAttr.prototype.apply__Lorg_scalajs_dom_Element__Lscalatags_generic_Attr__O__V = (function(t, a, v) {
-      var x13 = $n(a).Lscalatags_generic_Attr__f_namespace;
-      var x = $m_s_None$();
-      if ((x === x13)) {
-        if ((!$n(a).Lscalatags_generic_Attr__f_raw)) {
-          if (($n(a).Lscalatags_generic_Attr__f_name === "class")) {
-            var this$1 = $n($dp_toString__T($n(v)));
-            var xs = $f_T__split__T__I__AT(this$1, " ", 0);
-            var f = ((cls) => {
-              var cls$1 = $as_T(cls);
-              var x$1 = $f_T__trim__T($n(cls$1));
-              var this$6 = $n(x$1);
-              if ((!(this$6 === ""))) {
-                t.classList.add($f_T__trim__T($n(cls$1)));
-              }
-            });
-            var len = $n(xs).u.length;
-            var i = 0;
-            if ((xs !== null)) {
-              while ((i < len)) {
-                var arg1 = $n(xs).get(i);
-                f(arg1);
-                i = ((1 + i) | 0);
-              }
-              return (void 0);
-            } else if ((xs instanceof $ac_I)) {
-              var x3 = $asArrayOf_I(xs, 1);
-              while ((i < len)) {
-                var arg1$1 = $n(x3).get(i);
-                f(arg1$1);
-                i = ((1 + i) | 0);
-              }
-              return (void 0);
-            } else if ((xs instanceof $ac_D)) {
-              var x4 = $asArrayOf_D(xs, 1);
-              while ((i < len)) {
-                var arg1$2 = $n(x4).get(i);
-                f(arg1$2);
-                i = ((1 + i) | 0);
-              }
-              return (void 0);
-            } else if ((xs instanceof $ac_J)) {
-              var x5 = $asArrayOf_J(xs, 1);
-              while ((i < len)) {
-                var t$1 = $n(x5).get(i);
-                var lo = t$1.RTLong__f_lo;
-                var hi = t$1.RTLong__f_hi;
-                f(new $c_RTLong(lo, hi));
-                i = ((1 + i) | 0);
-              }
-              return (void 0);
-            } else if ((xs instanceof $ac_F)) {
-              var x6 = $asArrayOf_F(xs, 1);
-              while ((i < len)) {
-                var arg1$3 = $n(x6).get(i);
-                f(arg1$3);
-                i = ((1 + i) | 0);
-              }
-              return (void 0);
-            } else if ((xs instanceof $ac_C)) {
-              var x7 = $asArrayOf_C(xs, 1);
-              while ((i < len)) {
-                var arg1$4 = $n(x7).get(i);
-                f($bC(arg1$4));
-                i = ((1 + i) | 0);
-              }
-              return (void 0);
-            } else if ((xs instanceof $ac_B)) {
-              var x8 = $asArrayOf_B(xs, 1);
-              while ((i < len)) {
-                var arg1$5 = $n(x8).get(i);
-                f(arg1$5);
-                i = ((1 + i) | 0);
-              }
-              return (void 0);
-            } else if ((xs instanceof $ac_S)) {
-              var x9 = $asArrayOf_S(xs, 1);
-              while ((i < len)) {
-                var arg1$6 = $n(x9).get(i);
-                f(arg1$6);
-                i = ((1 + i) | 0);
-              }
-              return (void 0);
-            } else if ((xs instanceof $ac_Z)) {
-              var x10 = $asArrayOf_Z(xs, 1);
-              while ((i < len)) {
-                var arg1$7 = $n(x10).get(i);
-                f(arg1$7);
-                i = ((1 + i) | 0);
-              }
-              return (void 0);
-            } else {
-              throw new $c_s_MatchError(xs);
-            }
-          } else {
-            t.setAttribute($n(a).Lscalatags_generic_Attr__f_name, $dp_toString__T($n(v)));
-            return (void 0);
-          }
-        } else {
-          var tmpElm = document.createElement("p");
-          tmpElm.innerHTML = (((("<p " + $n(a).Lscalatags_generic_Attr__f_name) + "=\"") + $dp_toString__T($n(v))) + "\"><p>");
-          var newAttr = tmpElm.children[0].attributes[0].cloneNode(true);
-          t.setAttributeNode(newAttr);
-          return (void 0);
-        }
-      }
-      if ((x13 instanceof $c_s_Some)) {
-        var namespace = $as_Lscalatags_generic_Namespace($n($as_s_Some(x13)).s_Some__f_value);
-        t.setAttributeNS($n(namespace).uri__T(), $n(a).Lscalatags_generic_Attr__f_name, $dp_toString__T($n(v)));
-        return (void 0);
-      }
-      throw new $c_s_MatchError(x13);
-    });
-    new $TypeData().initClass($c_Lscalatags_JsDom$GenericAttr, "scalatags.JsDom$GenericAttr", ({
-      Lscalatags_JsDom$GenericAttr: 1,
-      Lscalatags_generic_AttrValue: 1
-    }));
-    /** @constructor */
-    function $c_Lscalatags_JsDom$GenericStyle() {
-    }
-    $c_Lscalatags_JsDom$GenericStyle.prototype = new $h_O();
-    $c_Lscalatags_JsDom$GenericStyle.prototype.constructor = $c_Lscalatags_JsDom$GenericStyle;
-    $c_Lscalatags_JsDom$GenericStyle.prototype;
-    new $TypeData().initClass($c_Lscalatags_JsDom$GenericStyle, "scalatags.JsDom$GenericStyle", ({
-      Lscalatags_JsDom$GenericStyle: 1,
-      Lscalatags_generic_StyleValue: 1
-    }));
-    /** @constructor */
-    function $c_Lscalatags_LowPriorityImplicits$$anon$2(ev$3) {
-      this.Lscalatags_LowPriorityImplicits$$anon$2__f_ev$2 = null;
-      this.Lscalatags_LowPriorityImplicits$$anon$2__f_ev$2 = ev$3;
-    }
-    $c_Lscalatags_LowPriorityImplicits$$anon$2.prototype = new $h_O();
-    $c_Lscalatags_LowPriorityImplicits$$anon$2.prototype.constructor = $c_Lscalatags_LowPriorityImplicits$$anon$2;
-    $c_Lscalatags_LowPriorityImplicits$$anon$2.prototype;
-    $c_Lscalatags_LowPriorityImplicits$$anon$2.prototype.apply__Lorg_scalajs_dom_Element__Lscalatags_generic_Attr__O__V = (function(t, a, v) {
-      t[$n(a).Lscalatags_generic_Attr__f_name] = $n(this.Lscalatags_LowPriorityImplicits$$anon$2__f_ev$2).apply__O__O(v);
-    });
-    new $TypeData().initClass($c_Lscalatags_LowPriorityImplicits$$anon$2, "scalatags.LowPriorityImplicits$$anon$2", ({
-      Lscalatags_LowPriorityImplicits$$anon$2: 1,
-      Lscalatags_generic_AttrValue: 1
-    }));
-    function $f_Lscalatags_generic_Aggregate__$init$__V($thiz) {
-      $thiz.Lscalatags_JsDom$all$__f_stringAttr = new $c_Lscalatags_JsDom$GenericAttr();
-      $thiz.Lscalatags_JsDom$all$__f_stringStyle = new $c_Lscalatags_JsDom$GenericStyle();
-      $thiz.Lscalatags_JsDom$all$__f_booleanStyle = new $c_Lscalatags_JsDom$GenericStyle();
-    }
-    /** @constructor */
-    function $c_Lscalatags_generic_Namespace$$anon$1() {
-    }
-    $c_Lscalatags_generic_Namespace$$anon$1.prototype = new $h_O();
-    $c_Lscalatags_generic_Namespace$$anon$1.prototype.constructor = $c_Lscalatags_generic_Namespace$$anon$1;
-    $c_Lscalatags_generic_Namespace$$anon$1.prototype;
-    $c_Lscalatags_generic_Namespace$$anon$1.prototype.uri__T = (function() {
-      return "http://www.w3.org/1999/xhtml";
-    });
-    new $TypeData().initClass($c_Lscalatags_generic_Namespace$$anon$1, "scalatags.generic.Namespace$$anon$1", ({
-      Lscalatags_generic_Namespace$$anon$1: 1,
-      Lscalatags_generic_Namespace: 1
-    }));
-    function $f_Lscalatags_generic_Util__attr__T__Lscalatags_generic_Namespace__Z__Lscalatags_generic_Attr($thiz, s, ns, raw) {
-      var namespace = $m_s_Option$().apply__O__s_Option(ns);
-      return new $c_Lscalatags_generic_Attr(s, namespace, raw);
-    }
     /** @constructor */
     function $c_Lcats_FlatMap$ToFlatMapOps$$anon$2(target$2, tc$2) {
       this.Lcats_FlatMap$ToFlatMapOps$$anon$2__f_self = null;
@@ -14624,17 +15666,8 @@
     }
     class $c_jl_Error extends $c_jl_Throwable {
     }
-    function $ct_jl_Exception__T__($thiz, s) {
-      $ct_jl_Throwable__T__jl_Throwable__Z__Z__($thiz, s, null, true, true);
-      return $thiz;
-    }
     class $c_jl_Exception extends $c_jl_Throwable {
     }
-    new $TypeData().initClass($c_jl_Exception, "java.lang.Exception", ({
-      jl_Exception: 1,
-      jl_Throwable: 1,
-      Ljava_io_Serializable: 1
-    }));
     function $ct_Ljava_nio_ByteBuffer__I__AB__I__($thiz, _capacity, _array, _arrayOffset) {
       $thiz.Ljava_nio_ByteBuffer__f__array = _array;
       $thiz.Ljava_nio_ByteBuffer__f__arrayOffset = _arrayOffset;
@@ -14831,6 +15864,22 @@
         }
         default: {
           throw $ct_jl_IndexOutOfBoundsException__T__(new $c_jl_IndexOutOfBoundsException(), (n + " is out of bounds (min 0, max 1)"));
+        }
+      }
+    }
+    function $f_s_Product3__productElement__I__O($thiz, n) {
+      switch (n) {
+        case 0: {
+          return $thiz.T3__f__1;
+        }
+        case 1: {
+          return $thiz.T3__f__2;
+        }
+        case 2: {
+          return $thiz.T3__f__3;
+        }
+        default: {
+          throw $ct_jl_IndexOutOfBoundsException__T__(new $c_jl_IndexOutOfBoundsException(), (n + " is out of bounds (min 0, max 2)"));
         }
       }
     }
@@ -16665,68 +17714,6 @@
         $n_s_util_Random$ = new $c_s_util_Random$();
       }
       return $n_s_util_Random$;
-    }
-    /** @constructor */
-    function $c_Lscalatags_LowPriorityImplicits$bindNode(outer, e) {
-      this.Lscalatags_LowPriorityImplicits$bindNode__f_e = null;
-      this.Lscalatags_LowPriorityImplicits$bindNode__f_e = e;
-      if ((outer === null)) {
-        throw $ct_jl_NullPointerException__(new $c_jl_NullPointerException());
-      }
-    }
-    $c_Lscalatags_LowPriorityImplicits$bindNode.prototype = new $h_O();
-    $c_Lscalatags_LowPriorityImplicits$bindNode.prototype.constructor = $c_Lscalatags_LowPriorityImplicits$bindNode;
-    $c_Lscalatags_LowPriorityImplicits$bindNode.prototype;
-    $c_Lscalatags_LowPriorityImplicits$bindNode.prototype.applyTo__Lorg_scalajs_dom_Element__V = (function(t) {
-      t.appendChild(this.Lscalatags_LowPriorityImplicits$bindNode__f_e);
-    });
-    $c_Lscalatags_LowPriorityImplicits$bindNode.prototype.applyTo__O__V = (function(t) {
-      this.applyTo__Lorg_scalajs_dom_Element__V(t);
-    });
-    new $TypeData().initClass($c_Lscalatags_LowPriorityImplicits$bindNode, "scalatags.LowPriorityImplicits$bindNode", ({
-      Lscalatags_LowPriorityImplicits$bindNode: 1,
-      Lscalatags_generic_Modifier: 1,
-      Lscalatags_generic_Frag: 1
-    }));
-    function $f_Lscalatags_generic_MouseEventAttrs__$init$__V($thiz) {
-      $f_Lscalatags_generic_Util__attr__T__Lscalatags_generic_Namespace__Z__Lscalatags_generic_Attr($thiz, "ondrag", null, false);
-    }
-    function $f_Lscalatags_generic_TypedTag__build__O__V($thiz, b) {
-      var current = $thiz.Lscalatags_JsDom$TypedTag__f_modifiers;
-      var dimensions = new $ac_I(new Int32Array([$n($thiz.Lscalatags_JsDom$TypedTag__f_modifiers).length__I()]));
-      var arr = $asArrayOf_sci_Seq($m_jl_reflect_Array$().newInstance__jl_Class__AI__O($d_sci_Seq.getClassOf(), dimensions), 1);
-      var i = 0;
-      while (true) {
-        var x = current;
-        var x$2 = $m_sci_Nil$();
-        if ((!((x !== null) && $n(x).equals__O__Z(x$2)))) {
-          $n(arr).set(i, $as_sci_Seq($n(current).head__O()));
-          current = $as_sci_List($n(current).tail__O());
-          i = ((1 + i) | 0);
-        } else {
-          break;
-        }
-      }
-      var j = $n(arr).u.length;
-      while ((j > 0)) {
-        j = (((-1) + j) | 0);
-        var frag = $n(arr).get(j);
-        var i$2 = 0;
-        while ((i$2 < $n(frag).length__I())) {
-          $n($as_Lscalatags_generic_Modifier($n(frag).apply__I__O(i$2))).applyTo__O__V(b);
-          i$2 = ((1 + i$2) | 0);
-        }
-      }
-    }
-    function $f_Lscalatags_jsdom_Frag__applyTo__Lorg_scalajs_dom_Element__V($thiz, b) {
-      b.appendChild($thiz.render__Lorg_scalajs_dom_Node());
-    }
-    function $f_Lscalatags_jsdom_TagFactory__typedTag__T__Z__Lscalatags_generic_Namespace__Lscalatags_generic_TypedTag($thiz, s, void$1, ns) {
-      if ((!$m_Lscalatags_Escaping$().validTag__T__Z(s))) {
-        throw $ct_jl_IllegalArgumentException__T__(new $c_jl_IllegalArgumentException(), (("Illegal tag name: " + s) + " is not a valid XML tag name"));
-      }
-      var modifiers = $m_sci_Nil$();
-      return new $c_Lscalatags_JsDom$TypedTag(s, modifiers, void$1, ns);
     }
     /** @constructor */
     function $c_Lcats_Show$$anon$5() {
@@ -19496,105 +20483,6 @@
       return (((obj instanceof $c_s_util_Try) || (obj === null)) ? obj : $throwClassCastException(obj, "scala.util.Try"));
     }
     /** @constructor */
-    function $c_Lscalatags_generic_Attr(name, namespace, raw) {
-      this.Lscalatags_generic_Attr__f_name = null;
-      this.Lscalatags_generic_Attr__f_namespace = null;
-      this.Lscalatags_generic_Attr__f_raw = false;
-      this.Lscalatags_generic_Attr__f_name = name;
-      this.Lscalatags_generic_Attr__f_namespace = namespace;
-      this.Lscalatags_generic_Attr__f_raw = raw;
-      if (((!raw) && (!$m_Lscalatags_Escaping$().validAttrName__T__Z(name)))) {
-        throw $ct_jl_IllegalArgumentException__T__(new $c_jl_IllegalArgumentException(), (("Illegal attribute name: " + name) + " is not a valid XML attribute name"));
-      }
-    }
-    $c_Lscalatags_generic_Attr.prototype = new $h_O();
-    $c_Lscalatags_generic_Attr.prototype.constructor = $c_Lscalatags_generic_Attr;
-    $c_Lscalatags_generic_Attr.prototype;
-    $c_Lscalatags_generic_Attr.prototype.productIterator__sc_Iterator = (function() {
-      return new $c_s_Product$$anon$1(this);
-    });
-    $c_Lscalatags_generic_Attr.prototype.hashCode__I = (function() {
-      var acc = (-889275714);
-      var hash = acc;
-      var data = $f_T__hashCode__I("Attr");
-      acc = $m_sr_Statics$().mix__I__I__I(hash, data);
-      var hash$1 = acc;
-      var x = this.Lscalatags_generic_Attr__f_name;
-      var data$1 = $m_sr_Statics$().anyHash__O__I(x);
-      acc = $m_sr_Statics$().mix__I__I__I(hash$1, data$1);
-      var hash$2 = acc;
-      var x$1 = this.Lscalatags_generic_Attr__f_namespace;
-      var data$2 = $m_sr_Statics$().anyHash__O__I(x$1);
-      acc = $m_sr_Statics$().mix__I__I__I(hash$2, data$2);
-      var hash$3 = acc;
-      var data$3 = (this.Lscalatags_generic_Attr__f_raw ? 1231 : 1237);
-      acc = $m_sr_Statics$().mix__I__I__I(hash$3, data$3);
-      var hash$4 = acc;
-      return $m_sr_Statics$().finalizeHash__I__I__I(hash$4, 3);
-    });
-    $c_Lscalatags_generic_Attr.prototype.equals__O__Z = (function(x$0) {
-      if ((this === x$0)) {
-        return true;
-      } else if ((x$0 instanceof $c_Lscalatags_generic_Attr)) {
-        var x$0$2 = $as_Lscalatags_generic_Attr(x$0);
-        if (((this.Lscalatags_generic_Attr__f_raw === $n(x$0$2).Lscalatags_generic_Attr__f_raw) && (this.Lscalatags_generic_Attr__f_name === $n(x$0$2).Lscalatags_generic_Attr__f_name))) {
-          var x = this.Lscalatags_generic_Attr__f_namespace;
-          var x$2 = $n(x$0$2).Lscalatags_generic_Attr__f_namespace;
-          var $x_1 = ((x === null) ? (x$2 === null) : $n(x).equals__O__Z(x$2));
-        } else {
-          var $x_1 = false;
-        }
-        if ($x_1) {
-          $n(x$0$2);
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    });
-    $c_Lscalatags_generic_Attr.prototype.toString__T = (function() {
-      return $m_sr_ScalaRunTime$()._toString__s_Product__T(this);
-    });
-    $c_Lscalatags_generic_Attr.prototype.productArity__I = (function() {
-      return 3;
-    });
-    $c_Lscalatags_generic_Attr.prototype.productPrefix__T = (function() {
-      return "Attr";
-    });
-    $c_Lscalatags_generic_Attr.prototype.productElement__I__O = (function(n) {
-      switch (n) {
-        case 0: {
-          return this.Lscalatags_generic_Attr__f_name;
-        }
-        case 1: {
-          return this.Lscalatags_generic_Attr__f_namespace;
-        }
-        case 2: {
-          return this.Lscalatags_generic_Attr__f_raw;
-        }
-        default: {
-          throw $ct_jl_IndexOutOfBoundsException__T__(new $c_jl_IndexOutOfBoundsException(), ("" + n));
-        }
-      }
-    });
-    $c_Lscalatags_generic_Attr.prototype.$colon$eq__O__Lscalatags_generic_AttrValue__Lscalatags_generic_AttrPair = (function(v, ev) {
-      if ((v === null)) {
-        throw $ct_jl_NullPointerException__(new $c_jl_NullPointerException());
-      }
-      return new $c_Lscalatags_generic_AttrPair(this, v, ev);
-    });
-    function $as_Lscalatags_generic_Attr(obj) {
-      return (((obj instanceof $c_Lscalatags_generic_Attr) || (obj === null)) ? obj : $throwClassCastException(obj, "scalatags.generic.Attr"));
-    }
-    new $TypeData().initClass($c_Lscalatags_generic_Attr, "scalatags.generic.Attr", ({
-      Lscalatags_generic_Attr: 1,
-      s_Equals: 1,
-      s_Product: 1,
-      Ljava_io_Serializable: 1
-    }));
-    /** @constructor */
     function $c_Lcats_effect_ExitCode$$anon$1(i$1) {
       this.Lcats_effect_ExitCode__f_code = 0;
       $ct_Lcats_effect_ExitCode__I__(this, (255 & i$1));
@@ -21521,6 +22409,57 @@
     var $d_T2 = new $TypeData().initClass($c_T2, "scala.Tuple2", ({
       T2: 1,
       s_Product2: 1,
+      s_Product: 1,
+      s_Equals: 1,
+      Ljava_io_Serializable: 1
+    }));
+    /** @constructor */
+    function $c_T3(_1, _2, _3) {
+      this.T3__f__1 = null;
+      this.T3__f__2 = null;
+      this.T3__f__3 = null;
+      this.T3__f__1 = _1;
+      this.T3__f__2 = _2;
+      this.T3__f__3 = _3;
+    }
+    $c_T3.prototype = new $h_O();
+    $c_T3.prototype.constructor = $c_T3;
+    $c_T3.prototype;
+    $c_T3.prototype.productArity__I = (function() {
+      return 3;
+    });
+    $c_T3.prototype.productElement__I__O = (function(n) {
+      return $f_s_Product3__productElement__I__O(this, n);
+    });
+    $c_T3.prototype.toString__T = (function() {
+      return (((((("(" + this.T3__f__1) + ",") + this.T3__f__2) + ",") + this.T3__f__3) + ")");
+    });
+    $c_T3.prototype.productPrefix__T = (function() {
+      return "Tuple3";
+    });
+    $c_T3.prototype.productIterator__sc_Iterator = (function() {
+      return new $c_sr_ScalaRunTime$$anon$1(this);
+    });
+    $c_T3.prototype.hashCode__I = (function() {
+      var this$2 = $m_s_util_hashing_MurmurHash3$();
+      return this$2.productHash__s_Product__I__Z__I(this, (-889275714), false);
+    });
+    $c_T3.prototype.equals__O__Z = (function(x$1) {
+      if ((this === x$1)) {
+        return true;
+      } else if ((x$1 instanceof $c_T3)) {
+        var Tuple3$1 = $as_T3(x$1);
+        return ($m_sr_BoxesRunTime$().equals__O__O__Z(this.T3__f__1, $n(Tuple3$1).T3__f__1) && ($m_sr_BoxesRunTime$().equals__O__O__Z(this.T3__f__2, $n(Tuple3$1).T3__f__2) && $m_sr_BoxesRunTime$().equals__O__O__Z(this.T3__f__3, $n(Tuple3$1).T3__f__3)));
+      } else {
+        return false;
+      }
+    });
+    function $as_T3(obj) {
+      return (((obj instanceof $c_T3) || (obj === null)) ? obj : $throwClassCastException(obj, "scala.Tuple3"));
+    }
+    new $TypeData().initClass($c_T3, "scala.Tuple3", ({
+      T3: 1,
+      s_Product3: 1,
       s_Product: 1,
       s_Equals: 1,
       Ljava_io_Serializable: 1
@@ -25079,99 +26018,6 @@
       s_util_Try: 1,
       s_Product: 1,
       s_Equals: 1,
-      Ljava_io_Serializable: 1
-    }));
-    /** @constructor */
-    function $c_Lscalatags_generic_AttrPair(a, v, ev) {
-      this.Lscalatags_generic_AttrPair__f_a = null;
-      this.Lscalatags_generic_AttrPair__f_v = null;
-      this.Lscalatags_generic_AttrPair__f_ev = null;
-      this.Lscalatags_generic_AttrPair__f_a = a;
-      this.Lscalatags_generic_AttrPair__f_v = v;
-      this.Lscalatags_generic_AttrPair__f_ev = ev;
-    }
-    $c_Lscalatags_generic_AttrPair.prototype = new $h_O();
-    $c_Lscalatags_generic_AttrPair.prototype.constructor = $c_Lscalatags_generic_AttrPair;
-    $c_Lscalatags_generic_AttrPair.prototype;
-    $c_Lscalatags_generic_AttrPair.prototype.productIterator__sc_Iterator = (function() {
-      return new $c_s_Product$$anon$1(this);
-    });
-    $c_Lscalatags_generic_AttrPair.prototype.hashCode__I = (function() {
-      var this$2 = $m_s_util_hashing_MurmurHash3$();
-      return this$2.productHash__s_Product__I__Z__I(this, (-889275714), false);
-    });
-    $c_Lscalatags_generic_AttrPair.prototype.equals__O__Z = (function(x$0) {
-      if ((this === x$0)) {
-        return true;
-      } else if ((x$0 instanceof $c_Lscalatags_generic_AttrPair)) {
-        var x$0$2 = $as_Lscalatags_generic_AttrPair(x$0);
-        var x = this.Lscalatags_generic_AttrPair__f_a;
-        var x$2 = $n(x$0$2).Lscalatags_generic_AttrPair__f_a;
-        if (((x === null) ? (x$2 === null) : $n(x).equals__O__Z(x$2))) {
-          var x$1 = this.Lscalatags_generic_AttrPair__f_v;
-          var y = $n(x$0$2).Lscalatags_generic_AttrPair__f_v;
-          var $x_2 = $m_sr_BoxesRunTime$().equals__O__O__Z(x$1, y);
-        } else {
-          var $x_2 = false;
-        }
-        if ($x_2) {
-          var x$3 = this.Lscalatags_generic_AttrPair__f_ev;
-          var x$4 = $n(x$0$2).Lscalatags_generic_AttrPair__f_ev;
-          if ((x$3 === null)) {
-            var $x_1 = (x$4 === null);
-          } else {
-            var this$1$1 = $n(x$3);
-            var $x_1 = (this$1$1 === x$4);
-          }
-        } else {
-          var $x_1 = false;
-        }
-        if ($x_1) {
-          $n(x$0$2);
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    });
-    $c_Lscalatags_generic_AttrPair.prototype.toString__T = (function() {
-      return $m_sr_ScalaRunTime$()._toString__s_Product__T(this);
-    });
-    $c_Lscalatags_generic_AttrPair.prototype.productArity__I = (function() {
-      return 3;
-    });
-    $c_Lscalatags_generic_AttrPair.prototype.productPrefix__T = (function() {
-      return "AttrPair";
-    });
-    $c_Lscalatags_generic_AttrPair.prototype.productElement__I__O = (function(n) {
-      switch (n) {
-        case 0: {
-          return this.Lscalatags_generic_AttrPair__f_a;
-        }
-        case 1: {
-          return this.Lscalatags_generic_AttrPair__f_v;
-        }
-        case 2: {
-          return this.Lscalatags_generic_AttrPair__f_ev;
-        }
-        default: {
-          throw $ct_jl_IndexOutOfBoundsException__T__(new $c_jl_IndexOutOfBoundsException(), ("" + n));
-        }
-      }
-    });
-    $c_Lscalatags_generic_AttrPair.prototype.applyTo__O__V = (function(t) {
-      $n(this.Lscalatags_generic_AttrPair__f_ev).apply__Lorg_scalajs_dom_Element__Lscalatags_generic_Attr__O__V(t, this.Lscalatags_generic_AttrPair__f_a, this.Lscalatags_generic_AttrPair__f_v);
-    });
-    function $as_Lscalatags_generic_AttrPair(obj) {
-      return (((obj instanceof $c_Lscalatags_generic_AttrPair) || (obj === null)) ? obj : $throwClassCastException(obj, "scalatags.generic.AttrPair"));
-    }
-    new $TypeData().initClass($c_Lscalatags_generic_AttrPair, "scalatags.generic.AttrPair", ({
-      Lscalatags_generic_AttrPair: 1,
-      Lscalatags_generic_Modifier: 1,
-      s_Equals: 1,
-      s_Product: 1,
       Ljava_io_Serializable: 1
     }));
     function $as_Lcats_effect_IO$Attempt(obj) {
@@ -30127,6 +30973,9 @@
     $c_Ljava_io_PrintStream.prototype.print__T__V = (function(s) {
       $p_Ljava_io_PrintStream__printString__T__V(this, ((s === null) ? "null" : s));
     });
+    $c_Ljava_io_PrintStream.prototype.print__O__V = (function(obj) {
+      $p_Ljava_io_PrintStream__printString__T__V(this, ("" + obj));
+    });
     $c_Ljava_io_PrintStream.prototype.println__V = (function() {
       if ((!this.Ljava_io_PrintStream__f_java$io$PrintStream$$closed)) {
         try {
@@ -30146,6 +30995,10 @@
       this.print__T__V(s);
       this.println__V();
     });
+    $c_Ljava_io_PrintStream.prototype.println__O__V = (function(obj) {
+      this.print__O__V(obj);
+      this.println__V();
+    });
     $c_Ljava_io_PrintStream.prototype.append__jl_CharSequence__Ljava_io_PrintStream = (function(csq) {
       this.print__T__V(((csq === null) ? "null" : $dp_toString__T($n(csq))));
       return this;
@@ -30153,6 +31006,9 @@
     $c_Ljava_io_PrintStream.prototype.append__jl_CharSequence__jl_Appendable = (function(csq) {
       return this.append__jl_CharSequence__Ljava_io_PrintStream(csq);
     });
+    function $as_Ljava_io_PrintStream(obj) {
+      return (((obj instanceof $c_Ljava_io_PrintStream) || (obj === null)) ? obj : $throwClassCastException(obj, "java.io.PrintStream"));
+    }
     new $TypeData().initClass($c_Ljava_io_PrintStream, "java.io.PrintStream", ({
       Ljava_io_PrintStream: 1,
       Ljava_io_FilterOutputStream: 1,
@@ -31463,70 +32319,6 @@
       s_Product: 1,
       s_Equals: 1
     }));
-    /** @constructor */
-    function $c_Lscalatags_JsDom$StringFrag(v) {
-      this.Lscalatags_JsDom$StringFrag__f_v = null;
-      this.Lscalatags_JsDom$StringFrag__f_v = v;
-      if ((v === null)) {
-        throw $ct_jl_NullPointerException__(new $c_jl_NullPointerException());
-      }
-    }
-    $c_Lscalatags_JsDom$StringFrag.prototype = new $h_O();
-    $c_Lscalatags_JsDom$StringFrag.prototype.constructor = $c_Lscalatags_JsDom$StringFrag;
-    $c_Lscalatags_JsDom$StringFrag.prototype;
-    $c_Lscalatags_JsDom$StringFrag.prototype.productIterator__sc_Iterator = (function() {
-      return new $c_s_Product$$anon$1(this);
-    });
-    $c_Lscalatags_JsDom$StringFrag.prototype.hashCode__I = (function() {
-      var this$2 = $m_s_util_hashing_MurmurHash3$();
-      return this$2.productHash__s_Product__I__Z__I(this, (-889275714), false);
-    });
-    $c_Lscalatags_JsDom$StringFrag.prototype.equals__O__Z = (function(x$0) {
-      if ((this === x$0)) {
-        return true;
-      } else if ((x$0 instanceof $c_Lscalatags_JsDom$StringFrag)) {
-        var x$0$2 = $as_Lscalatags_JsDom$StringFrag(x$0);
-        return ((this.Lscalatags_JsDom$StringFrag__f_v === $n(x$0$2).Lscalatags_JsDom$StringFrag__f_v) && ($n(x$0$2), true));
-      } else {
-        return false;
-      }
-    });
-    $c_Lscalatags_JsDom$StringFrag.prototype.toString__T = (function() {
-      return $m_sr_ScalaRunTime$()._toString__s_Product__T(this);
-    });
-    $c_Lscalatags_JsDom$StringFrag.prototype.productArity__I = (function() {
-      return 1;
-    });
-    $c_Lscalatags_JsDom$StringFrag.prototype.productPrefix__T = (function() {
-      return "StringFrag";
-    });
-    $c_Lscalatags_JsDom$StringFrag.prototype.productElement__I__O = (function(n) {
-      if ((n === 0)) {
-        return this.Lscalatags_JsDom$StringFrag__f_v;
-      }
-      throw $ct_jl_IndexOutOfBoundsException__T__(new $c_jl_IndexOutOfBoundsException(), ("" + n));
-    });
-    $c_Lscalatags_JsDom$StringFrag.prototype.render__Lorg_scalajs_dom_Text = (function() {
-      return document.createTextNode(this.Lscalatags_JsDom$StringFrag__f_v);
-    });
-    $c_Lscalatags_JsDom$StringFrag.prototype.render__Lorg_scalajs_dom_Node = (function() {
-      return this.render__Lorg_scalajs_dom_Text();
-    });
-    $c_Lscalatags_JsDom$StringFrag.prototype.applyTo__O__V = (function(t) {
-      $f_Lscalatags_jsdom_Frag__applyTo__Lorg_scalajs_dom_Element__V(this, t);
-    });
-    function $as_Lscalatags_JsDom$StringFrag(obj) {
-      return (((obj instanceof $c_Lscalatags_JsDom$StringFrag) || (obj === null)) ? obj : $throwClassCastException(obj, "scalatags.JsDom$StringFrag"));
-    }
-    new $TypeData().initClass($c_Lscalatags_JsDom$StringFrag, "scalatags.JsDom$StringFrag", ({
-      Lscalatags_JsDom$StringFrag: 1,
-      Lscalatags_generic_Modifier: 1,
-      Lscalatags_generic_Frag: 1,
-      Lscalatags_jsdom_Frag: 1,
-      s_Equals: 1,
-      s_Product: 1,
-      Ljava_io_Serializable: 1
-    }));
     function $is_Lcats_Traverse(obj) {
       return (!(!((obj && obj.$classData) && obj.$classData.ancestors.Lcats_Traverse)));
     }
@@ -31864,8 +32656,14 @@
     $c_jl_JSConsoleBasedPrintStream.prototype.print__T__V = (function(s) {
       this.java$lang$JSConsoleBasedPrintStream$$printString__T__V(((s === null) ? "null" : s));
     });
+    $c_jl_JSConsoleBasedPrintStream.prototype.print__O__V = (function(obj) {
+      this.java$lang$JSConsoleBasedPrintStream$$printString__T__V(("" + obj));
+    });
     $c_jl_JSConsoleBasedPrintStream.prototype.println__V = (function() {
       this.java$lang$JSConsoleBasedPrintStream$$printString__T__V("\n");
+    });
+    $c_jl_JSConsoleBasedPrintStream.prototype.println__O__V = (function(obj) {
+      this.java$lang$JSConsoleBasedPrintStream$$printString__T__V((obj + "\n"));
     });
     $c_jl_JSConsoleBasedPrintStream.prototype.java$lang$JSConsoleBasedPrintStream$$printString__T__V = (function(s) {
       var rest = s;
@@ -32095,140 +32893,6 @@
     $c_s_reflect_ManifestFactory$UnitManifest.prototype.newArray__I__O = (function(len) {
       return new ($d_jl_Void.getArrayOf().constr)(len);
     });
-    /** @constructor */
-    function $c_Lscalatags_JsDom$TypedTag(tag, modifiers, void$1, namespace) {
-      this.Lscalatags_JsDom$TypedTag__f_tag = null;
-      this.Lscalatags_JsDom$TypedTag__f_modifiers = null;
-      this.Lscalatags_JsDom$TypedTag__f_void = false;
-      this.Lscalatags_JsDom$TypedTag__f_namespace = null;
-      this.Lscalatags_JsDom$TypedTag__f_tag = tag;
-      this.Lscalatags_JsDom$TypedTag__f_modifiers = modifiers;
-      this.Lscalatags_JsDom$TypedTag__f_void = void$1;
-      this.Lscalatags_JsDom$TypedTag__f_namespace = namespace;
-    }
-    $c_Lscalatags_JsDom$TypedTag.prototype = new $h_O();
-    $c_Lscalatags_JsDom$TypedTag.prototype.constructor = $c_Lscalatags_JsDom$TypedTag;
-    $c_Lscalatags_JsDom$TypedTag.prototype;
-    $c_Lscalatags_JsDom$TypedTag.prototype.productIterator__sc_Iterator = (function() {
-      return new $c_s_Product$$anon$1(this);
-    });
-    $c_Lscalatags_JsDom$TypedTag.prototype.hashCode__I = (function() {
-      var acc = (-889275714);
-      var hash = acc;
-      var data = $f_T__hashCode__I("TypedTag");
-      acc = $m_sr_Statics$().mix__I__I__I(hash, data);
-      var hash$1 = acc;
-      var x = this.Lscalatags_JsDom$TypedTag__f_tag;
-      var data$1 = $m_sr_Statics$().anyHash__O__I(x);
-      acc = $m_sr_Statics$().mix__I__I__I(hash$1, data$1);
-      var hash$2 = acc;
-      var x$1 = this.Lscalatags_JsDom$TypedTag__f_modifiers;
-      var data$2 = $m_sr_Statics$().anyHash__O__I(x$1);
-      acc = $m_sr_Statics$().mix__I__I__I(hash$2, data$2);
-      var hash$3 = acc;
-      var data$3 = (this.Lscalatags_JsDom$TypedTag__f_void ? 1231 : 1237);
-      acc = $m_sr_Statics$().mix__I__I__I(hash$3, data$3);
-      var hash$4 = acc;
-      var x$2 = this.Lscalatags_JsDom$TypedTag__f_namespace;
-      var data$4 = $m_sr_Statics$().anyHash__O__I(x$2);
-      acc = $m_sr_Statics$().mix__I__I__I(hash$4, data$4);
-      var hash$5 = acc;
-      return $m_sr_Statics$().finalizeHash__I__I__I(hash$5, 4);
-    });
-    $c_Lscalatags_JsDom$TypedTag.prototype.equals__O__Z = (function(x$0) {
-      if ((this === x$0)) {
-        return true;
-      } else if ((x$0 instanceof $c_Lscalatags_JsDom$TypedTag)) {
-        var x$0$2 = $as_Lscalatags_JsDom$TypedTag(x$0);
-        if (((this.Lscalatags_JsDom$TypedTag__f_void === $n(x$0$2).Lscalatags_JsDom$TypedTag__f_void) && (this.Lscalatags_JsDom$TypedTag__f_tag === $n(x$0$2).Lscalatags_JsDom$TypedTag__f_tag))) {
-          var x = this.Lscalatags_JsDom$TypedTag__f_modifiers;
-          var x$2 = $n(x$0$2).Lscalatags_JsDom$TypedTag__f_modifiers;
-          var $x_2 = ((x === null) ? (x$2 === null) : $n(x).equals__O__Z(x$2));
-        } else {
-          var $x_2 = false;
-        }
-        if ($x_2) {
-          var x$3 = this.Lscalatags_JsDom$TypedTag__f_namespace;
-          var x$4 = $n(x$0$2).Lscalatags_JsDom$TypedTag__f_namespace;
-          if ((x$3 === null)) {
-            var $x_1 = (x$4 === null);
-          } else {
-            var this$1$1 = $n(x$3);
-            var $x_1 = (this$1$1 === x$4);
-          }
-        } else {
-          var $x_1 = false;
-        }
-        if ($x_1) {
-          $n(x$0$2);
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    });
-    $c_Lscalatags_JsDom$TypedTag.prototype.productArity__I = (function() {
-      return 4;
-    });
-    $c_Lscalatags_JsDom$TypedTag.prototype.productPrefix__T = (function() {
-      return "TypedTag";
-    });
-    $c_Lscalatags_JsDom$TypedTag.prototype.productElement__I__O = (function(n) {
-      switch (n) {
-        case 0: {
-          return this.Lscalatags_JsDom$TypedTag__f_tag;
-        }
-        case 1: {
-          return this.Lscalatags_JsDom$TypedTag__f_modifiers;
-        }
-        case 2: {
-          return this.Lscalatags_JsDom$TypedTag__f_void;
-        }
-        case 3: {
-          return this.Lscalatags_JsDom$TypedTag__f_namespace;
-        }
-        default: {
-          throw $ct_jl_IndexOutOfBoundsException__T__(new $c_jl_IndexOutOfBoundsException(), ("" + n));
-        }
-      }
-    });
-    $c_Lscalatags_JsDom$TypedTag.prototype.render__Lorg_scalajs_dom_Element = (function() {
-      var elem = document.createElementNS($n(this.Lscalatags_JsDom$TypedTag__f_namespace).uri__T(), this.Lscalatags_JsDom$TypedTag__f_tag);
-      $f_Lscalatags_generic_TypedTag__build__O__V(this, elem);
-      return elem;
-    });
-    $c_Lscalatags_JsDom$TypedTag.prototype.apply__sci_Seq__Lscalatags_JsDom$TypedTag = (function(xs) {
-      var this$1$1 = $n(this.Lscalatags_JsDom$TypedTag__f_modifiers);
-      var modifiers$1 = new $c_sci_$colon$colon(xs, this$1$1);
-      var namespace$1 = this.Lscalatags_JsDom$TypedTag__f_namespace;
-      var tag = this.Lscalatags_JsDom$TypedTag__f_tag;
-      var void$1 = this.Lscalatags_JsDom$TypedTag__f_void;
-      return new $c_Lscalatags_JsDom$TypedTag(tag, modifiers$1, void$1, namespace$1);
-    });
-    $c_Lscalatags_JsDom$TypedTag.prototype.toString__T = (function() {
-      return $as_T(this.render__Lorg_scalajs_dom_Element().outerHTML);
-    });
-    $c_Lscalatags_JsDom$TypedTag.prototype.render__Lorg_scalajs_dom_Node = (function() {
-      return this.render__Lorg_scalajs_dom_Element();
-    });
-    $c_Lscalatags_JsDom$TypedTag.prototype.applyTo__O__V = (function(t) {
-      $f_Lscalatags_jsdom_Frag__applyTo__Lorg_scalajs_dom_Element__V(this, t);
-    });
-    function $as_Lscalatags_JsDom$TypedTag(obj) {
-      return (((obj instanceof $c_Lscalatags_JsDom$TypedTag) || (obj === null)) ? obj : $throwClassCastException(obj, "scalatags.JsDom$TypedTag"));
-    }
-    new $TypeData().initClass($c_Lscalatags_JsDom$TypedTag, "scalatags.JsDom$TypedTag", ({
-      Lscalatags_JsDom$TypedTag: 1,
-      Lscalatags_generic_Modifier: 1,
-      Lscalatags_generic_Frag: 1,
-      Lscalatags_generic_TypedTag: 1,
-      Lscalatags_jsdom_Frag: 1,
-      s_Equals: 1,
-      s_Product: 1,
-      Ljava_io_Serializable: 1
-    }));
     function $f_Lcats_FlatMap__map2__O__O__F2__O($thiz, fa, fb, f) {
       return $thiz.flatMap__O__F1__O(fa, new $c_sjsr_AnonFunction1(((a) => $thiz.map__O__F1__O(fb, new $c_sjsr_AnonFunction1(((b) => $n(f).apply__O__O__O(a, b)))))));
     }
@@ -33573,33 +34237,6 @@
       Ljava_io_Serializable: 1,
       sc_SeqView: 1,
       sc_SeqOps: 1
-    }));
-    function $is_sci_Seq(obj) {
-      return (!(!((obj && obj.$classData) && obj.$classData.ancestors.sci_Seq)));
-    }
-    function $as_sci_Seq(obj) {
-      return (($is_sci_Seq(obj) || (obj === null)) ? obj : $throwClassCastException(obj, "scala.collection.immutable.Seq"));
-    }
-    function $isArrayOf_sci_Seq(obj, depth) {
-      return (!(!(((obj && obj.$classData) && (obj.$classData.arrayDepth === depth)) && obj.$classData.arrayBase.ancestors.sci_Seq)));
-    }
-    function $asArrayOf_sci_Seq(obj, depth) {
-      return (($isArrayOf_sci_Seq(obj, depth) || (obj === null)) ? obj : $throwArrayCastException(obj, "Lscala.collection.immutable.Seq;", depth));
-    }
-    var $d_sci_Seq = new $TypeData().initClass(1, "scala.collection.immutable.Seq", ({
-      sci_Seq: 1,
-      sci_Iterable: 1,
-      sc_Iterable: 1,
-      sc_IterableOnce: 1,
-      sc_IterableOps: 1,
-      sc_IterableOnceOps: 1,
-      sc_IterableFactoryDefaults: 1,
-      sc_Seq: 1,
-      s_PartialFunction: 1,
-      F1: 1,
-      sc_SeqOps: 1,
-      s_Equals: 1,
-      sci_SeqOps: 1
     }));
     function $f_scm_MapOps__update__O__O__V($thiz, key, value) {
       var this$1 = $n($as_scm_Growable($thiz));
@@ -36634,223 +37271,6 @@
     });
     function $as_scm_ArraySeq(obj) {
       return (((obj instanceof $c_scm_ArraySeq) || (obj === null)) ? obj : $throwClassCastException(obj, "scala.collection.mutable.ArraySeq"));
-    }
-    /** @constructor */
-    function $c_Lscalatags_JsDom$all$() {
-      this.Lscalatags_JsDom$all$__f_class$lzy3 = null;
-      this.Lscalatags_JsDom$all$__f_classbitmap$3 = false;
-      this.Lscalatags_JsDom$all$__f_cls$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_clsbitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_id$lzy3 = null;
-      this.Lscalatags_JsDom$all$__f_idbitmap$3 = false;
-      this.Lscalatags_JsDom$all$__f_placeholder$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_placeholderbitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_target$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_targetbitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_type$lzy3 = null;
-      this.Lscalatags_JsDom$all$__f_typebitmap$3 = false;
-      this.Lscalatags_JsDom$all$__f_onsubmit$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_onsubmitbitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_href$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_hrefbitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_alt$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_altbitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_src$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_srcbitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_h1$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_h1bitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_p$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_pbitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_div$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_divbitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_a$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_abitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_img$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_imgbitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_form$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_formbitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_input$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_inputbitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_button$lzy2 = null;
-      this.Lscalatags_JsDom$all$__f_buttonbitmap$2 = false;
-      this.Lscalatags_JsDom$all$__f_stringAttr = null;
-      this.Lscalatags_JsDom$all$__f_stringStyle = null;
-      this.Lscalatags_JsDom$all$__f_booleanStyle = null;
-      $n_Lscalatags_JsDom$all$ = this;
-      $f_Lscalatags_generic_MouseEventAttrs__$init$__V(this);
-      $f_Lscalatags_generic_Aggregate__$init$__V(this);
-    }
-    $c_Lscalatags_JsDom$all$.prototype = new $h_O();
-    $c_Lscalatags_JsDom$all$.prototype.constructor = $c_Lscalatags_JsDom$all$;
-    $c_Lscalatags_JsDom$all$.prototype;
-    $c_Lscalatags_JsDom$all$.prototype.class__Lscalatags_generic_Attr = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_classbitmap$3)) {
-        this.Lscalatags_JsDom$all$__f_class$lzy3 = $f_Lscalatags_generic_Util__attr__T__Lscalatags_generic_Namespace__Z__Lscalatags_generic_Attr(this, "class", null, false);
-        this.Lscalatags_JsDom$all$__f_classbitmap$3 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_class$lzy3;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.cls__Lscalatags_generic_Attr = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_clsbitmap$2)) {
-        this.Lscalatags_JsDom$all$__f_cls$lzy2 = this.class__Lscalatags_generic_Attr();
-        this.Lscalatags_JsDom$all$__f_clsbitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_cls$lzy2;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.id__Lscalatags_generic_Attr = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_idbitmap$3)) {
-        this.Lscalatags_JsDom$all$__f_id$lzy3 = $f_Lscalatags_generic_Util__attr__T__Lscalatags_generic_Namespace__Z__Lscalatags_generic_Attr(this, "id", null, false);
-        this.Lscalatags_JsDom$all$__f_idbitmap$3 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_id$lzy3;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.placeholder__Lscalatags_generic_Attr = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_placeholderbitmap$2)) {
-        this.Lscalatags_JsDom$all$__f_placeholder$lzy2 = $f_Lscalatags_generic_Util__attr__T__Lscalatags_generic_Namespace__Z__Lscalatags_generic_Attr(this, "placeholder", null, false);
-        this.Lscalatags_JsDom$all$__f_placeholderbitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_placeholder$lzy2;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.target__Lscalatags_generic_Attr = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_targetbitmap$2)) {
-        this.Lscalatags_JsDom$all$__f_target$lzy2 = $f_Lscalatags_generic_Util__attr__T__Lscalatags_generic_Namespace__Z__Lscalatags_generic_Attr(this, "target", null, false);
-        this.Lscalatags_JsDom$all$__f_targetbitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_target$lzy2;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.type__Lscalatags_generic_Attr = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_typebitmap$3)) {
-        this.Lscalatags_JsDom$all$__f_type$lzy3 = $f_Lscalatags_generic_Util__attr__T__Lscalatags_generic_Namespace__Z__Lscalatags_generic_Attr(this, "type", null, false);
-        this.Lscalatags_JsDom$all$__f_typebitmap$3 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_type$lzy3;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.onsubmit__Lscalatags_generic_Attr = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_onsubmitbitmap$2)) {
-        this.Lscalatags_JsDom$all$__f_onsubmit$lzy2 = $f_Lscalatags_generic_Util__attr__T__Lscalatags_generic_Namespace__Z__Lscalatags_generic_Attr(this, "onsubmit", null, false);
-        this.Lscalatags_JsDom$all$__f_onsubmitbitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_onsubmit$lzy2;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.href__Lscalatags_generic_Attr = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_hrefbitmap$2)) {
-        this.Lscalatags_JsDom$all$__f_href$lzy2 = $f_Lscalatags_generic_Util__attr__T__Lscalatags_generic_Namespace__Z__Lscalatags_generic_Attr(this, "href", null, false);
-        this.Lscalatags_JsDom$all$__f_hrefbitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_href$lzy2;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.alt__Lscalatags_generic_Attr = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_altbitmap$2)) {
-        this.Lscalatags_JsDom$all$__f_alt$lzy2 = $f_Lscalatags_generic_Util__attr__T__Lscalatags_generic_Namespace__Z__Lscalatags_generic_Attr(this, "alt", null, false);
-        this.Lscalatags_JsDom$all$__f_altbitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_alt$lzy2;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.src__Lscalatags_generic_Attr = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_srcbitmap$2)) {
-        this.Lscalatags_JsDom$all$__f_src$lzy2 = $f_Lscalatags_generic_Util__attr__T__Lscalatags_generic_Namespace__Z__Lscalatags_generic_Attr(this, "src", null, false);
-        this.Lscalatags_JsDom$all$__f_srcbitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_src$lzy2;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.h1__Lscalatags_generic_TypedTag = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_h1bitmap$2)) {
-        var ns = $m_Lscalatags_generic_Namespace$().Lscalatags_generic_Namespace$__f_htmlNamespaceConfig;
-        this.Lscalatags_JsDom$all$__f_h1$lzy2 = $f_Lscalatags_jsdom_TagFactory__typedTag__T__Z__Lscalatags_generic_Namespace__Lscalatags_generic_TypedTag(this, "h1", false, ns);
-        this.Lscalatags_JsDom$all$__f_h1bitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_h1$lzy2;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.p__Lscalatags_generic_TypedTag = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_pbitmap$2)) {
-        var ns = $m_Lscalatags_generic_Namespace$().Lscalatags_generic_Namespace$__f_htmlNamespaceConfig;
-        this.Lscalatags_JsDom$all$__f_p$lzy2 = $f_Lscalatags_jsdom_TagFactory__typedTag__T__Z__Lscalatags_generic_Namespace__Lscalatags_generic_TypedTag(this, "p", false, ns);
-        this.Lscalatags_JsDom$all$__f_pbitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_p$lzy2;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.div__Lscalatags_generic_TypedTag = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_divbitmap$2)) {
-        var ns = $m_Lscalatags_generic_Namespace$().Lscalatags_generic_Namespace$__f_htmlNamespaceConfig;
-        this.Lscalatags_JsDom$all$__f_div$lzy2 = $f_Lscalatags_jsdom_TagFactory__typedTag__T__Z__Lscalatags_generic_Namespace__Lscalatags_generic_TypedTag(this, "div", false, ns);
-        this.Lscalatags_JsDom$all$__f_divbitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_div$lzy2;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.a__Lscalatags_generic_TypedTag = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_abitmap$2)) {
-        var ns = $m_Lscalatags_generic_Namespace$().Lscalatags_generic_Namespace$__f_htmlNamespaceConfig;
-        this.Lscalatags_JsDom$all$__f_a$lzy2 = $f_Lscalatags_jsdom_TagFactory__typedTag__T__Z__Lscalatags_generic_Namespace__Lscalatags_generic_TypedTag(this, "a", false, ns);
-        this.Lscalatags_JsDom$all$__f_abitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_a$lzy2;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.img__Lscalatags_generic_TypedTag = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_imgbitmap$2)) {
-        var ns = $m_Lscalatags_generic_Namespace$().Lscalatags_generic_Namespace$__f_htmlNamespaceConfig;
-        this.Lscalatags_JsDom$all$__f_img$lzy2 = $f_Lscalatags_jsdom_TagFactory__typedTag__T__Z__Lscalatags_generic_Namespace__Lscalatags_generic_TypedTag(this, "img", true, ns);
-        this.Lscalatags_JsDom$all$__f_imgbitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_img$lzy2;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.form__Lscalatags_generic_TypedTag = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_formbitmap$2)) {
-        var ns = $m_Lscalatags_generic_Namespace$().Lscalatags_generic_Namespace$__f_htmlNamespaceConfig;
-        this.Lscalatags_JsDom$all$__f_form$lzy2 = $f_Lscalatags_jsdom_TagFactory__typedTag__T__Z__Lscalatags_generic_Namespace__Lscalatags_generic_TypedTag(this, "form", false, ns);
-        this.Lscalatags_JsDom$all$__f_formbitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_form$lzy2;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.input__Lscalatags_generic_TypedTag = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_inputbitmap$2)) {
-        var ns = $m_Lscalatags_generic_Namespace$().Lscalatags_generic_Namespace$__f_htmlNamespaceConfig;
-        this.Lscalatags_JsDom$all$__f_input$lzy2 = $f_Lscalatags_jsdom_TagFactory__typedTag__T__Z__Lscalatags_generic_Namespace__Lscalatags_generic_TypedTag(this, "input", true, ns);
-        this.Lscalatags_JsDom$all$__f_inputbitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_input$lzy2;
-    });
-    $c_Lscalatags_JsDom$all$.prototype.button__Lscalatags_generic_TypedTag = (function() {
-      if ((!this.Lscalatags_JsDom$all$__f_buttonbitmap$2)) {
-        var ns = $m_Lscalatags_generic_Namespace$().Lscalatags_generic_Namespace$__f_htmlNamespaceConfig;
-        this.Lscalatags_JsDom$all$__f_button$lzy2 = $f_Lscalatags_jsdom_TagFactory__typedTag__T__Z__Lscalatags_generic_Namespace__Lscalatags_generic_TypedTag(this, "button", false, ns);
-        this.Lscalatags_JsDom$all$__f_buttonbitmap$2 = true;
-      }
-      return this.Lscalatags_JsDom$all$__f_button$lzy2;
-    });
-    new $TypeData().initClass($c_Lscalatags_JsDom$all$, "scalatags.JsDom$all$", ({
-      Lscalatags_JsDom$all$: 1,
-      Lscalatags_generic_LowPriUtil: 1,
-      Lscalatags_generic_Util: 1,
-      Lscalatags_jsdom_TagFactory: 1,
-      Lscalatags_JsDom$Cap: 1,
-      Lscalatags_generic_GlobalAttrs: 1,
-      Lscalatags_generic_InputAttrs: 1,
-      Lscalatags_generic_ClipboardEventAttrs: 1,
-      Lscalatags_generic_SharedEventAttrs: 1,
-      Lscalatags_generic_MediaEventAttrs: 1,
-      Lscalatags_generic_MiscellaneousEventAttrs: 1,
-      Lscalatags_generic_KeyboardEventAttrs: 1,
-      Lscalatags_generic_MouseEventAttrs: 1,
-      Lscalatags_generic_WindowEventAttrs: 1,
-      Lscalatags_generic_FormEventAttrs: 1,
-      Lscalatags_generic_AnchorElementAttrs: 1,
-      Lscalatags_generic_Attrs: 1,
-      Lscalatags_generic_StyleMisc: 1,
-      Lscalatags_generic_Styles: 1,
-      Lscalatags_generic_Tags: 1,
-      Lscalatags_jsdom_Tags: 1,
-      Lscalatags_DataConverters: 1,
-      Lscalatags_generic_Aliases: 1,
-      Lscalatags_generic_Aggregate: 1,
-      Lscalatags_JsDom$Aggregate: 1,
-      Lscalatags_LowPriorityImplicits: 1
-    }));
-    var $n_Lscalatags_JsDom$all$;
-    function $m_Lscalatags_JsDom$all$() {
-      if ((!$n_Lscalatags_JsDom$all$)) {
-        $n_Lscalatags_JsDom$all$ = new $c_Lscalatags_JsDom$all$();
-      }
-      return $n_Lscalatags_JsDom$all$;
     }
     /** @constructor */
     function $c_Lcats_effect_IO$$anon$2() {
@@ -42184,6 +42604,6 @@
     }));
     $L0 = new $c_RTLong(0, 0);
     $d_J.zero = $L0;
-    $s_LFront__main__AT__V(new ($d_T.getArrayOf().constr)([]));
+    $s_LTray__main__AT__V(new ($d_T.getArrayOf().constr)([]));
 
 })();
