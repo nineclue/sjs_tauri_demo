@@ -11,9 +11,6 @@ importers:
       '@tauri-apps/api':
         specifier: ^2.2.0
         version: 2.2.0
-      '@tauri-apps/plugin-notification':
-        specifier: ~2.2.1
-        version: 2.2.1
     devDependencies:
       '@tauri-apps/cli':
         specifier: ^2
@@ -92,9 +89,6 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
-  '@tauri-apps/plugin-notification@2.2.1':
-    resolution: {integrity: sha512-QF8Zod6XDhxD6xkD5nU/BjbOpJ6+3gxGCrVULOdLpvMuMSN2Z2IdObV/qgnrEJk1UamUCF1ClQUqNCbk4zTJNQ==}
-
   typescript@5.7.3:
     resolution: {integrity: sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==}
     engines: {node: '>=14.17'}
@@ -146,9 +140,5 @@ snapshots:
       '@tauri-apps/cli-win32-arm64-msvc': 2.2.7
       '@tauri-apps/cli-win32-ia32-msvc': 2.2.7
       '@tauri-apps/cli-win32-x64-msvc': 2.2.7
-
-  '@tauri-apps/plugin-notification@2.2.1':
-    dependencies:
-      '@tauri-apps/api': 2.2.0
 
   typescript@5.7.3: {}

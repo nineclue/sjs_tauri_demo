@@ -24,8 +24,39 @@ trait base extends ScalaJSRollupModule {
                 )
             )
 
-    def sc  = Task {
+    /*
+    private def base(b: Target[Seq[PathRef]]) = Task {
+        val bundles = b()
+        val jsPath = bundles.head.path / os.up
+        val targetPath = jsPath / os.up / os.up / os.up / "src"
+        val target = targetPath / "main.js"
+        os.copy.over(jsPath / "out-bundle.js", target)
+        val sourceMap = jsPath / "out-bundle.js.map"
+        if (os.exists(sourceMap)) {
+            os.copy.over(sourceMap, targetPath / "main.js.map")
+        }
+        PathRef(target)
+    }
+
+    def fsc = base(devBundle)
+    def sc = base(prodBundle)
+    */
+
+    def fsc = Task {
         val bundles = devBundle()
+        val jsPath = bundles.head.path / os.up
+        val targetPath = jsPath / os.up / os.up / os.up / "src"
+        val target = targetPath / "main.js"
+        os.copy.over(jsPath / "out-bundle.js", target)
+        val sourceMap = jsPath / "out-bundle.js.map"
+        if (os.exists(sourceMap)) {
+            os.copy.over(sourceMap, targetPath / "main.js.map")
+        }
+        PathRef(target)
+    }
+
+    def sc = Task {
+        val bundles = prodBundle()
         val jsPath = bundles.head.path / os.up
         val targetPath = jsPath / os.up / os.up / os.up / "src"
         val target = targetPath / "main.js"
@@ -39,7 +70,7 @@ trait base extends ScalaJSRollupModule {
 }
 
 object f extends base {
-  override def mainClass: T[Option[String]] = Some("Front")
+    override def mainClass: T[Option[String]] = Some("Front")
 }
 
 object t extends base {

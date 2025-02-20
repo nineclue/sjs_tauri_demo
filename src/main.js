@@ -10544,9 +10544,8 @@
     });
     $c_LTray$.prototype.trayMenu__sjs_js_Promise = (function() {
       var x$proxy1 = new $c_T3("tauri", "Tauri", "https://tauri.app");
-      var x$proxy2 = new $c_T3("scala", "Scala", "https://scala-lang.org");
-      var x$proxy3 = new $c_T3("scala.js", "Scala.js", "https://scala-js.org");
-      var menus = new $c_sci_$colon$colon(x$proxy1, new $c_sci_$colon$colon(x$proxy2, new $c_sci_$colon$colon(x$proxy3, $m_sci_Nil$())));
+      var x$proxy2 = new $c_T3("scala.js", "Scala.js", "https://scala-js.org");
+      var menus = new $c_sci_$colon$colon(x$proxy1, new $c_sci_$colon$colon(x$proxy2, $m_sci_Nil$()));
       var f = ((mi) => {
         var mi$1 = $as_T3(mi);
         var text$proxy1 = $as_T($n(mi$1).T3__f__2);
@@ -10589,6 +10588,12 @@
       var x = ((("selected " + id) + ": open ") + url);
       var this$2 = $m_s_Console$();
       $n(this$2.out__Ljava_io_PrintStream()).println__O__V(x);
+      window.location.replace(url);
+    });
+    $c_LTray$.prototype.trayHandler__Lorg_scalablytyped_runtime_StObject__V = (function(e) {
+      var x = ("tray event : " + e);
+      var this$2 = $m_s_Console$();
+      $n(this$2.out__Ljava_io_PrintStream()).println__O__V(x);
     });
     $c_LTray$.prototype.tray__Lcats_effect_IO = (function() {
       return $n(this.toIO__sjs_js_Promise__Lcats_effect_IO(defaultWindowIcon())).flatMap__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((icon) => $n($n($m_LTray$().toIO__sjs_js_Promise__Lcats_effect_IO($m_LTray$().trayMenu__sjs_js_Promise())).map__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((menu) => {
@@ -10596,6 +10601,11 @@
         var _\uff3fobj = $m_sjs_js_special_package$().objectLiteral__sci_Seq__sjs_js_Object(fields);
         _\uff3fobj.icon = icon;
         _\uff3fobj.menu = menu;
+        var value$proxy4 = new $c_sjsr_AnonFunction1(((e) => {
+          $m_LTray$().trayHandler__Lorg_scalablytyped_runtime_StObject__V(e);
+        }));
+        var value = $m_sjs_js_Any$().fromFunction1__F1__sjs_js_Function1(value$proxy4);
+        _\uff3fobj.action = value;
         return new $c_T2(menu, _\uff3fobj);
       })))).map__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((x$1) => {
         var x$1$1 = $as_T2(x$1);

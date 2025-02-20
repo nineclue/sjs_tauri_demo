@@ -29,7 +29,7 @@ object Tray extends IOApp:
         type MenuItem = (id: String, text: String, url: String)
         val menus = Seq(
             (id = "tauri", text = "Tauri", url = "https://tauri.app"),
-            (id = "scala", text = "Scala", url = "https://scala-lang.org"),
+            // (id = "scala", text = "Scala", url = "https://scala-lang.org"),
             (id = "scala.js", text = "Scala.js", url = "https://scala-js.org")
         )
         val menuItems = menus.map(mi =>
@@ -37,15 +37,21 @@ object Tray extends IOApp:
         val menuOption = menuMenuMod.MenuOptions().setItems(menuItems.toJSArray)
         menuMod.Menu.`new`(menuOption).asInstanceOf[Promise[menuMod.Menu]]
 
+    import typings.tauriAppsApi.{windowMod => W, webviewMod => WV}
+    import org.scalajs.dom
     def trayMenuHandler(url: String)(id: String): Unit =
         println(s"selected $id: open $url")
+        dom.window.location.replace(url)
 
     import typings.tauriAppsApi.trayMod
+    def trayHandler(e: trayMod.TrayIconEvent) = 
+        println(s"tray event : $e")
+
     def tray =
         for
             // capabilities에 "core:app:allow-default-window-icon" 필요
             icon        <-  appMod.defaultWindowIcon().toIO
             menu        <-  trayMenu.toIO
-            trayOption  =   trayMod.TrayIconOptions().setIcon(icon).setMenu(menu)
+            trayOption  =   trayMod.TrayIconOptions().setIcon(icon).setMenu(menu).setAction(trayHandler)
         yield
             trayMod.TrayIcon.`new`(trayOption).toIO
