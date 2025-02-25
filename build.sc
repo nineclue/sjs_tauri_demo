@@ -20,7 +20,8 @@ trait base extends ScalaJSRollupModule {
         super.jsDeps() ++
             JsDeps(
                 dependencies = Map(
-                    "@tauri-apps/api" -> "^2.2.0"
+                    "@tauri-apps/api" -> "^2.2.0",
+                    "@tauri-apps/plugin-notification" -> "~2"
                 )
             )
 
