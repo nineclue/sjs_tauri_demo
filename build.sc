@@ -25,25 +25,16 @@ trait base extends ScalaJSRollupModule {
                 )
             )
 
-    /*
-    private def base(b: Target[Seq[PathRef]]) = Task {
-        val bundles = b()
-        val jsPath = bundles.head.path / os.up
-        val targetPath = jsPath / os.up / os.up / os.up / "src"
-        val target = targetPath / "main.js"
-        os.copy.over(jsPath / "out-bundle.js", target)
-        val sourceMap = jsPath / "out-bundle.js.map"
-        if (os.exists(sourceMap)) {
-            os.copy.over(sourceMap, targetPath / "main.js.map")
-        }
-        PathRef(target)
+    def fl = Task {
+        val jsPath = fastLinkJS().dest.path
+		val targetPath = jsPath / os.up / os.up / os.up / "src"
+		val target = targetPath / "main.js"
+		os.copy.over(jsPath / "main.js", target)
+		os.copy.over(jsPath / "main.js.map", targetPath / "main.js.map")
+		PathRef(target)
     }
 
-    def fsc = base(devBundle)
-    def sc = base(prodBundle)
-    */
-
-    def fsc = Task {
+    def fb = Task {
         val bundles = devBundle()
         val jsPath = bundles.head.path / os.up
         val targetPath = jsPath / os.up / os.up / os.up / "src"

@@ -15,9 +15,17 @@ object Front extends IOApp:
     def run(as: List[String]): IO[ExitCode] =
         for
             tauriVersion    <-  appMod.getTauriVersion().toIO
-            notiFlag        <-  notiMod.isPermissionGranted().toIO
+            notiFlag        <-  notificationFlag
             _               <-  IO(dom.document.body.appendChild(content(tauriVersion, notiFlag).render))
+            _               <-  IO(UControl.openurl("실마리"))
         yield ExitCode.Success
+        
+    val notificationFlag: IO[Boolean] =
+        import typings.std.{NotificationPermission => NotiPerm}
+        for
+            notiPerm    <- notiMod.isPermissionGranted().toIO
+            notiReqRes  <- if !notiPerm then notiMod.requestPermission().toIO else IO(NotiPerm.granted)
+        yield notiReqRes == NotiPerm.granted
 
     def content(tauriVersion: String, notiFlag: Boolean) =
         val nameInput = input(id := "greet-input", placeholder := "Enter a name...").render
@@ -50,3 +58,11 @@ object Front extends IOApp:
                 button(`type` := "submit", "Greet")),
             greetMsg
         )
+
+import scala.scalajs.js.annotation.*
+@JSExportTopLevel("UControl", "main")
+object UControl:
+    // @JSExport
+    @JSExportTopLevel("openurl", "main")
+    def openurl(id: String) = 
+        println(s"이상한 메시지 : $id")

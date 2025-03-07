@@ -1,4 +1,4 @@
-(function () {
+(function (exports) {
     'use strict';
 
     /******************************************************************************
@@ -109,6 +109,25 @@
             return await Promise.resolve(window.Notification.permission === 'granted');
         }
         return await invoke('plugin:notification|is_permission_granted');
+    }
+    /**
+     * Requests the permission to send notifications.
+     * @example
+     * ```typescript
+     * import { isPermissionGranted, requestPermission } from '@tauri-apps/plugin-notification';
+     * let permissionGranted = await isPermissionGranted();
+     * if (!permissionGranted) {
+     *   const permission = await requestPermission();
+     *   permissionGranted = permission === 'granted';
+     * }
+     * ```
+     *
+     * @returns A promise resolving to whether the user granted the permission or not.
+     *
+     * @since 2.0.0
+     */
+    async function requestPermission() {
+        return await window.Notification.requestPermission();
     }
     /**
      * Sends a notification to the user.
@@ -1115,6 +1134,27 @@
         $n_LTauriUtil$ = new $c_LTauriUtil$();
       }
       return $n_LTauriUtil$;
+    }
+    /** @constructor */
+    function $c_LUControl$() {
+    }
+    $c_LUControl$.prototype = new $h_O();
+    $c_LUControl$.prototype.constructor = $c_LUControl$;
+    $c_LUControl$.prototype;
+    $c_LUControl$.prototype.openurl__T__V = (function(id) {
+      var x = ("\uc774\uc0c1\ud55c \uba54\uc2dc\uc9c0 : " + id);
+      var this$2 = $m_s_Console$();
+      $n(this$2.out__Ljava_io_PrintStream()).println__O__V(x);
+    });
+    new $TypeData().initClass($c_LUControl$, "UControl$", ({
+      LUControl$: 1
+    }));
+    var $n_LUControl$;
+    function $m_LUControl$() {
+      if ((!$n_LUControl$)) {
+        $n_LUControl$ = new $c_LUControl$();
+      }
+      return $n_LUControl$;
     }
     /** @constructor */
     function $c_Lcats_effect_ContState$() {
@@ -3174,8 +3214,10 @@
     }
     /** @constructor */
     function $c_jl_System$Streams$() {
+      this.jl_System$Streams$__f_out = null;
       this.jl_System$Streams$__f_err = null;
       $n_jl_System$Streams$ = this;
+      this.jl_System$Streams$__f_out = new $c_jl_JSConsoleBasedPrintStream(false);
       this.jl_System$Streams$__f_err = new $c_jl_JSConsoleBasedPrintStream(true);
     }
     $c_jl_System$Streams$.prototype = new $h_O();
@@ -8530,6 +8572,20 @@
       }
       return $n_s_sys_package$;
     }
+    /** @constructor */
+    function $c_s_util_DynamicVariable(init) {
+      this.s_util_DynamicVariable__f_v = null;
+      this.s_util_DynamicVariable__f_v = init;
+    }
+    $c_s_util_DynamicVariable.prototype = new $h_O();
+    $c_s_util_DynamicVariable.prototype.constructor = $c_s_util_DynamicVariable;
+    $c_s_util_DynamicVariable.prototype;
+    $c_s_util_DynamicVariable.prototype.toString__T = (function() {
+      return (("DynamicVariable(" + this.s_util_DynamicVariable__f_v) + ")");
+    });
+    new $TypeData().initClass($c_s_util_DynamicVariable, "scala.util.DynamicVariable", ({
+      s_util_DynamicVariable: 1
+    }));
     function $f_s_util_control_NoStackTrace__fillInStackTrace__jl_Throwable($thiz) {
       var this$1 = $m_s_util_control_NoStackTrace$();
       if (this$1.s_util_control_NoStackTrace$__f__noSuppression) {
@@ -9267,9 +9323,21 @@
     /** @constructor */
     function $c_LFront$() {
       this.LFront$__f_cats$effect$IOApp$$_runtime = null;
+      this.LFront$__f_notificationFlag = null;
       $n_LFront$ = this;
       this.LFront$__f_cats$effect$IOApp$$_runtime = null;
       $m_s_concurrent_ExecutionContext$().global__s_concurrent_ExecutionContextExecutor();
+      this.LFront$__f_notificationFlag = $n($m_LTauriUtil$().toIO__sjs_js_Promise__Lcats_effect_IO(isPermissionGranted())).flatMap__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((notiPerm) => {
+        var notiPerm$1 = $uZ(notiPerm);
+        if ((!notiPerm$1)) {
+          var $x_1 = $m_LTauriUtil$().toIO__sjs_js_Promise__Lcats_effect_IO(requestPermission());
+        } else {
+          var this$2 = $m_Lcats_effect_IO$();
+          var thunk = new $c_sjsr_AnonFunction0((() => "granted"));
+          var $x_1 = this$2.delay__F0__Lcats_effect_IO(thunk);
+        }
+        return $n($x_1).map__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((notiReqRes) => $m_sr_BoxesRunTime$().equals__O__O__Z(notiReqRes, "granted"))));
+      })));
     }
     $c_LFront$.prototype = new $h_O();
     $c_LFront$.prototype.constructor = $c_LFront$;
@@ -9277,11 +9345,20 @@
     $c_LFront$.prototype.run__sci_List__Lcats_effect_IO = (function(as) {
       return $n($m_LTauriUtil$().toIO__sjs_js_Promise__Lcats_effect_IO(getTauriVersion())).flatMap__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((tauriVersion) => {
         var tauriVersion$1 = $as_T(tauriVersion);
-        return $n($m_LTauriUtil$().toIO__sjs_js_Promise__Lcats_effect_IO(isPermissionGranted())).flatMap__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((notiFlag) => {
+        return $n($m_LFront$().LFront$__f_notificationFlag).flatMap__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((notiFlag) => {
           var notiFlag$1 = $uZ(notiFlag);
           var this$1 = $m_Lcats_effect_IO$();
           var thunk = new $c_sjsr_AnonFunction0((() => document.body.appendChild($n($m_LFront$().content__T__Z__Lscalatags_JsDom$TypedTag(tauriVersion$1, notiFlag$1)).render__Lorg_scalajs_dom_Element())));
-          return $n(this$1.delay__F0__Lcats_effect_IO(thunk)).map__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((x$1) => $m_Lcats_effect_ExitCode$().Lcats_effect_ExitCode$__f_Success)));
+          return $n(this$1.delay__F0__Lcats_effect_IO(thunk)).flatMap__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((x$1) => {
+            var this$2 = $m_Lcats_effect_IO$();
+            var thunk$1 = new $c_sjsr_AnonFunction0((() => {
+              $m_LUControl$().openurl__T__V("\uc2e4\ub9c8\ub9ac");
+            }));
+            return $n(this$2.delay__F0__Lcats_effect_IO(thunk$1)).map__F1__Lcats_effect_IO(new $c_sjsr_AnonFunction1(((x$1$2) => {
+              $as_jl_Void(x$1$2);
+              return $m_Lcats_effect_ExitCode$().Lcats_effect_ExitCode$__f_Success;
+            })));
+          })));
         })));
       })));
     });
@@ -12974,6 +13051,29 @@
         $n_s_Array$ = new $c_s_Array$();
       }
       return $n_s_Array$;
+    }
+    /** @constructor */
+    function $c_s_Console$() {
+      this.s_Console$__f_outVar = null;
+      $n_s_Console$ = this;
+      this.s_Console$__f_outVar = new $c_s_util_DynamicVariable($m_jl_System$Streams$().jl_System$Streams$__f_out);
+    }
+    $c_s_Console$.prototype = new $h_O();
+    $c_s_Console$.prototype.constructor = $c_s_Console$;
+    $c_s_Console$.prototype;
+    $c_s_Console$.prototype.out__Ljava_io_PrintStream = (function() {
+      return $as_Ljava_io_PrintStream($n(this.s_Console$__f_outVar).s_util_DynamicVariable__f_v);
+    });
+    new $TypeData().initClass($c_s_Console$, "scala.Console$", ({
+      s_Console$: 1,
+      s_io_AnsiColor: 1
+    }));
+    var $n_s_Console$;
+    function $m_s_Console$() {
+      if ((!$n_s_Console$)) {
+        $n_s_Console$ = new $c_s_Console$();
+      }
+      return $n_s_Console$;
     }
     /** @constructor */
     function $c_s_LowPriorityImplicits() {
@@ -30086,6 +30186,9 @@
     $c_Ljava_io_PrintStream.prototype.print__T__V = (function(s) {
       $p_Ljava_io_PrintStream__printString__T__V(this, ((s === null) ? "null" : s));
     });
+    $c_Ljava_io_PrintStream.prototype.print__O__V = (function(obj) {
+      $p_Ljava_io_PrintStream__printString__T__V(this, ("" + obj));
+    });
     $c_Ljava_io_PrintStream.prototype.println__V = (function() {
       if ((!this.Ljava_io_PrintStream__f_java$io$PrintStream$$closed)) {
         try {
@@ -30105,6 +30208,10 @@
       this.print__T__V(s);
       this.println__V();
     });
+    $c_Ljava_io_PrintStream.prototype.println__O__V = (function(obj) {
+      this.print__O__V(obj);
+      this.println__V();
+    });
     $c_Ljava_io_PrintStream.prototype.append__jl_CharSequence__Ljava_io_PrintStream = (function(csq) {
       this.print__T__V(((csq === null) ? "null" : $dp_toString__T($n(csq))));
       return this;
@@ -30112,6 +30219,9 @@
     $c_Ljava_io_PrintStream.prototype.append__jl_CharSequence__jl_Appendable = (function(csq) {
       return this.append__jl_CharSequence__Ljava_io_PrintStream(csq);
     });
+    function $as_Ljava_io_PrintStream(obj) {
+      return (((obj instanceof $c_Ljava_io_PrintStream) || (obj === null)) ? obj : $throwClassCastException(obj, "java.io.PrintStream"));
+    }
     new $TypeData().initClass($c_Ljava_io_PrintStream, "java.io.PrintStream", ({
       Ljava_io_PrintStream: 1,
       Ljava_io_FilterOutputStream: 1,
@@ -31823,8 +31933,14 @@
     $c_jl_JSConsoleBasedPrintStream.prototype.print__T__V = (function(s) {
       this.java$lang$JSConsoleBasedPrintStream$$printString__T__V(((s === null) ? "null" : s));
     });
+    $c_jl_JSConsoleBasedPrintStream.prototype.print__O__V = (function(obj) {
+      this.java$lang$JSConsoleBasedPrintStream$$printString__T__V(("" + obj));
+    });
     $c_jl_JSConsoleBasedPrintStream.prototype.println__V = (function() {
       this.java$lang$JSConsoleBasedPrintStream$$printString__T__V("\n");
+    });
+    $c_jl_JSConsoleBasedPrintStream.prototype.println__O__V = (function(obj) {
+      this.java$lang$JSConsoleBasedPrintStream$$printString__T__V((obj + "\n"));
     });
     $c_jl_JSConsoleBasedPrintStream.prototype.java$lang$JSConsoleBasedPrintStream$$printString__T__V = (function(s) {
       var rest = s;
@@ -42143,6 +42259,16 @@
     }));
     $L0 = new $c_RTLong(0, 0);
     $d_J.zero = $L0;
+    let $e_openurl = (function(arg) {
+      var prep0 = $as_T(arg);
+      $m_LUControl$().openurl__T__V(prep0);
+    });
+    let $e_UControl = $m_LUControl$();
     $s_LFront__main__AT__V(new ($d_T.getArrayOf().constr)([]));
 
-})();
+    exports.UControl = $e_UControl;
+    exports.openurl = $e_openurl;
+
+    return exports;
+
+})({});
