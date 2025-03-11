@@ -1,5 +1,6 @@
-import typings.tauriAppsApi.appMod
+import typings.tauriAppsApi.{appMod, coreMod, webviewMod}
 import scala.language.experimental.namedTuples
+import org.scalablytyped.runtime.{StringDictionary => SMap}
 
 object Tray: // extends IOApp:
     import scala.scalajs.js.Promise
@@ -12,7 +13,7 @@ object Tray: // extends IOApp:
         type MenuItem = (id: String, text: String, url: String)
         val menus = Seq(
             (id = "tauri", text = "Tauri", url = "https://tauri.app"),
-            // (id = "scala", text = "Scala", url = "https://scala-lang.org"),
+            (id = "scala", text = "Scala", url = "https://scala-lang.org"),
             (id = "scala.js", text = "Scala.js", url = "https://scala-js.org")
         )
         val menuItems = menus.map(mi =>
@@ -23,7 +24,10 @@ object Tray: // extends IOApp:
     import org.scalajs.dom
     def trayMenuHandler(url: String)(id: String): Unit =
         println(s"selected $id: open $url")
-        dom.window.location.replace(url)
+        // dom.window.location.replace(url)
+        // dom.window.open(url)
+        val cwv = webviewMod.Webview.getCurrent()
+        coreMod.invoke("navigate", SMap("webview" -> cwv, "url" -> url))
 
     import typings.tauriAppsApi.trayMod
     def trayHandler(e: trayMod.TrayIconEvent) = 

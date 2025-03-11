@@ -58,11 +58,3 @@ object Front extends IOApp:
                 button(`type` := "submit", "Greet")),
             greetMsg
         )
-
-import scala.scalajs.js.annotation.*
-@JSExportTopLevel("UControl", "main")
-object UControl:
-    // @JSExport
-    @JSExportTopLevel("openurl", "main")
-    def openurl(id: String) = 
-        println(s"이상한 메시지 : $id")

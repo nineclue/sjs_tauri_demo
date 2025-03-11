@@ -13,15 +13,6 @@
                 "title": "sjs_tauri_demo",
                 "width": 800,
                 "height": 600
-            },
-            {
-                "label": "control",
-                "title": "콘트롤",
-                "width": 200,
-                "height": 70,
-                "url": "control.html",
-                "parent": "main",
-                "visible": true
             }
         ],
         "security": {
